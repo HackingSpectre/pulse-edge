@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "window_seconds": 30,
+  "hop_seconds": 5,
+  "features": [
+    "hr_mean",
+    "hr_std",
+    "hr_min",
+    "hr_max",
+    "rmssd",
+    "pnn50",
+    "spo2_mean",
+    "temp_mean",
+    "temp_slope",
+    "accel_mean",
+    "accel_std",
+    "activity"
+  ],
+  "label": "anomaly",
+  "label_mapping": {
+    "0": "baseline",
+    "1": "amusement",
+    "2": "stress",
+    "3": "meditation"
+  },
+  "anomaly_positive": [2],
+  "notes": "Order matches FeatureWindow.toModelInput() in lib/core/ml/feature_window.dart. Any reorder/insert here MUST be mirrored there."
+}
