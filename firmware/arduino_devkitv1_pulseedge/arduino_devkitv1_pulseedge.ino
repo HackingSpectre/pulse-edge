@@ -19,7 +19,7 @@
 
 #include <Arduino.h>
 #include <math.h>
-#include <string>
+#include <string.h>
 
 #include <OneWire.h>
 #include <DallasTemperature.h>
@@ -124,11 +124,13 @@ static float magRing[MAG_N] = {0};
 static size_t magIdx = 0;
 
 // ================= Helpers =================
-template <typename T>
-static void pack(uint8_t *&p, T value) {
-  memcpy(p, &value, sizeof(T));
-  p += sizeof(T);
-}
+// Arduino IDE can sometimes break template helpers inside .ino files.
+// This macro avoids the previous 'T has not been declared' compile error.
+#define PACK(p, value) do {                  \
+  auto _packValue = (value);                 \
+  memcpy((p), &_packValue, sizeof(_packValue)); \
+  (p) += sizeof(_packValue);                 \
+} while (0)
 
 static uint8_t crc8(const uint8_t *data, size_t len) {
   uint8_t crc = 0x00;
@@ -229,18 +231,23 @@ static void setupBle() {
   charPpg = service->createCharacteristic(
       PE_CHAR_PPG_UUID,
       BLECharacteristic::PROPERTY_NOTIFY | BLECharacteristic::PROPERTY_READ);
+
   charTemp = service->createCharacteristic(
       PE_CHAR_TEMP_UUID,
       BLECharacteristic::PROPERTY_NOTIFY | BLECharacteristic::PROPERTY_READ);
+
   charImu = service->createCharacteristic(
       PE_CHAR_IMU_UUID,
       BLECharacteristic::PROPERTY_NOTIFY | BLECharacteristic::PROPERTY_READ);
+
   charStatus = service->createCharacteristic(
       PE_CHAR_STATUS_UUID,
       BLECharacteristic::PROPERTY_NOTIFY | BLECharacteristic::PROPERTY_READ);
+
   charVibrate = service->createCharacteristic(
       PE_CHAR_VIBRATE_UUID,
       BLECharacteristic::PROPERTY_WRITE | BLECharacteristic::PROPERTY_WRITE_NR);
+
   charConfig = service->createCharacteristic(
       PE_CHAR_CONFIG_UUID,
       BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE);
@@ -267,6 +274,7 @@ static void setupSensors() {
   Serial.println("[TEMP] starting DS18B20");
   tempSensor.begin();
   tempOk = tempSensor.getDeviceCount() > 0;
+
   if (tempOk) {
     tempSensor.setResolution(11);
     tempSensor.setWaitForConversion(false);
@@ -280,6 +288,7 @@ static void setupSensors() {
   Serial.println("[IMU] starting MPU6050");
   const byte mpuStatus = mpu.begin();
   imuOk = (mpuStatus == 0);
+
   if (imuOk) {
     delay(500);
     mpu.calcOffsets();
@@ -290,6 +299,7 @@ static void setupSensors() {
 
   Serial.println("[PPG] starting MAX30102/MAX30105");
   ppgOk = maxSensor.begin(Wire, I2C_SPEED_FAST);
+
   if (ppgOk) {
     // ledBrightness, sampleAverage, ledMode, sampleRate, pulseWidth, adcRange
     // ledMode 2 = red + IR. This supports HR and SpO2 estimation.
@@ -309,6 +319,7 @@ static void updateTemperature(uint32_t now) {
   if (now - lastTempRequestMs < 1000) return;
 
   const float t = tempSensor.getTempCByIndex(0);
+
   if (t != DEVICE_DISCONNECTED_C && t > -20.0f && t < 80.0f) {
     lastTempC = t;
   } else {
@@ -323,9 +334,11 @@ static void updateImu() {
   if (!imuOk) return;
 
   mpu.update();
+
   ax = mpu.getAccX() * 9.80665f;
   ay = mpu.getAccY() * 9.80665f;
   az = mpu.getAccZ() * 9.80665f;
+
   gx = mpu.getGyroX();
   gy = mpu.getGyroY();
   gz = mpu.getGyroZ();
@@ -335,10 +348,12 @@ static void updateImu() {
 
   float sum = 0.0f;
   float sumSq = 0.0f;
+
   for (size_t i = 0; i < MAG_N; ++i) {
     sum += magRing[i];
     sumSq += magRing[i] * magRing[i];
   }
+
   magMean = sum / MAG_N;
   const float var = max(0.0f, (sumSq / MAG_N) - (magMean * magMean));
   magStd = sqrtf(var);
@@ -348,21 +363,26 @@ static void updatePpg() {
   if (!ppgOk) return;
 
   maxSensor.check();
+
   while (maxSensor.available()) {
     const uint32_t red = maxSensor.getRed();
     const uint32_t ir = maxSensor.getIR();
+
     maxSensor.nextSample();
 
     contactOk = ir > 50000;
 
     if (redDc == 0.0f) redDc = (float)red;
+
     redDc = 0.98f * redDc + 0.02f * (float)red;
+
     const long acRed = (long)((float)red - redDc);
     ppgWindow[ppgWindowIdx++ % PPG_WINDOW_N] = clampInt16(acRed);
 
     irBuffer[spo2Idx] = ir;
     redBuffer[spo2Idx] = red;
     spo2Idx++;
+
     if (spo2Idx >= SPO2_N) {
       spo2Idx = 0;
       spo2Filled = true;
@@ -371,24 +391,35 @@ static void updatePpg() {
 
     if (contactOk && checkForBeat(ir)) {
       const uint32_t now = millis();
+
       if (lastBeatMs > 0) {
         const uint32_t dt = now - lastBeatMs;
         const float bpm = 60000.0f / (float)dt;
+
         if (bpm >= 35.0f && bpm <= 220.0f) {
           hrHistory[hrHistoryIdx++ % HR_AVG_N] = bpm;
-          if (hrHistoryCount < HR_AVG_N) hrHistoryCount++;
+
+          if (hrHistoryCount < HR_AVG_N) {
+            hrHistoryCount++;
+          }
 
           float sum = 0.0f;
-          for (size_t i = 0; i < hrHistoryCount; ++i) sum += hrHistory[i];
+
+          for (size_t i = 0; i < hrHistoryCount; ++i) {
+            sum += hrHistory[i];
+          }
+
           lastHrBpm = sum / (float)hrHistoryCount;
         }
       }
+
       lastBeatMs = now;
     }
   }
 
   if (spo2Filled && spo2Ready) {
     spo2Ready = false;
+
     int32_t spo2 = 0;
     int8_t validSpo2 = 0;
     int32_t hr = 0;
@@ -423,16 +454,17 @@ static void notifyPpg(uint32_t now) {
   uint8_t buf[16 + PPG_WINDOW_N * 2 + 1];
   uint8_t *p = buf;
 
-  pack<uint16_t>(p, ++ppgSeq);
-  pack<uint32_t>(p, now);
-  pack<float>(p, lastHrBpm);
-  pack<float>(p, lastSpo2);
-  pack<uint16_t>(p, (uint16_t)PPG_WINDOW_N);
+  PACK(p, (uint16_t)++ppgSeq);
+  PACK(p, (uint32_t)now);
+  PACK(p, lastHrBpm);
+  PACK(p, lastSpo2);
+  PACK(p, (uint16_t)PPG_WINDOW_N);
 
   const size_t start = ppgWindowIdx % PPG_WINDOW_N;
+
   for (size_t i = 0; i < PPG_WINDOW_N; ++i) {
     const int16_t sample = ppgWindow[(start + i) % PPG_WINDOW_N];
-    pack<int16_t>(p, sample);
+    PACK(p, sample);
   }
 
   *p = crc8(buf, (size_t)(p - buf));
@@ -447,8 +479,9 @@ static void notifyTemp(uint32_t now) {
 
   uint8_t buf[8];
   uint8_t *p = buf;
-  pack<uint32_t>(p, now);
-  pack<float>(p, lastTempC);
+
+  PACK(p, (uint32_t)now);
+  PACK(p, lastTempC);
 
   charTemp->setValue(buf, sizeof(buf));
   charTemp->notify();
@@ -459,15 +492,16 @@ static void notifyImu(uint32_t now) {
 
   uint8_t buf[36];
   uint8_t *p = buf;
-  pack<uint32_t>(p, now);
-  pack<float>(p, ax);
-  pack<float>(p, ay);
-  pack<float>(p, az);
-  pack<float>(p, gx);
-  pack<float>(p, gy);
-  pack<float>(p, gz);
-  pack<float>(p, magMean);
-  pack<float>(p, magStd);
+
+  PACK(p, (uint32_t)now);
+  PACK(p, ax);
+  PACK(p, ay);
+  PACK(p, az);
+  PACK(p, gx);
+  PACK(p, gy);
+  PACK(p, gz);
+  PACK(p, magMean);
+  PACK(p, magStd);
 
   charImu->setValue(buf, sizeof(buf));
   charImu->notify();
@@ -477,7 +511,9 @@ static void notifyStatus() {
   if (!deviceConnected || charStatus == nullptr) return;
 
   uint8_t flags = 0;
+
   const bool allSensorsOk = tempOk && imuOk && ppgOk;
+
   if (allSensorsOk) flags |= 0x02;
   if (ppgOk) flags |= 0x08;
   if (tempOk) flags |= 0x10;
@@ -498,21 +534,40 @@ static void notifyStatus() {
 static void logStatus(uint32_t now) {
   Serial.println();
   Serial.println("========== PulseEdge ==========");
-  Serial.printf("uptime=%lu ms connected=%s\n", (unsigned long)now, deviceConnected ? "yes" : "no");
-  Serial.printf("sensors: ppg=%s temp=%s imu=%s contact=%s\n",
-                ppgOk ? "ok" : "missing",
-                tempOk ? "ok" : "missing",
-                imuOk ? "ok" : "missing",
-                contactOk ? "yes" : "no");
-  Serial.printf("hr=%.1f bpm spo2=%.1f temp=%.2f C\n", lastHrBpm, lastSpo2, lastTempC);
-  Serial.printf("accel=%.2f %.2f %.2f m/s2 gyro=%.2f %.2f %.2f dps\n",
-                ax, ay, az, gx, gy, gz);
+
+  Serial.printf(
+      "uptime=%lu ms connected=%s\n",
+      (unsigned long)now,
+      deviceConnected ? "yes" : "no");
+
+  Serial.printf(
+      "sensors: ppg=%s temp=%s imu=%s contact=%s\n",
+      ppgOk ? "ok" : "missing",
+      tempOk ? "ok" : "missing",
+      imuOk ? "ok" : "missing",
+      contactOk ? "yes" : "no");
+
+  Serial.printf(
+      "hr=%.1f bpm spo2=%.1f temp=%.2f C\n",
+      lastHrBpm,
+      lastSpo2,
+      lastTempC);
+
+  Serial.printf(
+      "accel=%.2f %.2f %.2f m/s2 gyro=%.2f %.2f %.2f dps\n",
+      ax,
+      ay,
+      az,
+      gx,
+      gy,
+      gz);
 }
 
 // ================= Arduino lifecycle =================
 void setup() {
   Serial.begin(115200);
   delay(300);
+
   Serial.println();
   Serial.println("[PulseEdge] booting DevKitV1 firmware");
 
@@ -543,6 +598,7 @@ void loop() {
     oldDeviceConnected = deviceConnected;
     Serial.println("[BLE] advertising restarted");
   }
+
   if (deviceConnected && !oldDeviceConnected) {
     oldDeviceConnected = deviceConnected;
   }

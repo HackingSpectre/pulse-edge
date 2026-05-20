@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:rxdart/rxdart.dart';
 
 import '../alerts/alert_engine.dart';
@@ -119,6 +121,7 @@ class BleService {
     Duration timeout = const Duration(seconds: 8),
   }) async* {
     await _ensureBluetoothReady();
+    await _ensureScanPermissions();
     await FlutterBluePlus.stopScan();
     _statusSubject.add(BleStatus(state: BleConnState.scanning));
     await FlutterBluePlus.startScan(
@@ -134,6 +137,28 @@ class BleService {
         .map(_pulseEdgeResults)
         .takeUntil(Stream<void>.value(null).delay(timeout))
         .doOnDone(() => unawaited(stopScan()));
+  }
+
+  Future<void> _ensureScanPermissions() async {
+    if (!Platform.isAndroid) return;
+    final statuses = await [
+      Permission.bluetoothScan,
+      Permission.bluetoothConnect,
+      Permission.location,
+    ].request();
+    final granted = statuses.values.every(
+      (s) => s.isGranted || s.isLimited,
+    );
+    if (!granted) {
+      final denied = statuses.entries
+          .where((e) => !e.value.isGranted && !e.value.isLimited)
+          .map((e) => e.key)
+          .map((p) => p.toString())
+          .toList();
+      throw StateError(
+        'Missing Bluetooth scan permission: ${denied.join(', ')}',
+      );
+    }
   }
 
   Future<void> stopScan() async {
