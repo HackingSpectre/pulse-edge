@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:rxdart/rxdart.dart';
@@ -141,23 +142,24 @@ class BleService {
 
   Future<void> _ensureScanPermissions() async {
     if (!Platform.isAndroid) return;
+    final info = await DeviceInfoPlugin().androidInfo;
+    final needsLocation = info.version.sdkInt <= 30;
+    if (needsLocation) {
+      final status = await Permission.location.request();
+      if (!status.isGranted && !status.isLimited) {
+        throw StateError('Missing Bluetooth scan permission: location');
+      }
+      return;
+    }
     final statuses = await [
       Permission.bluetoothScan,
       Permission.bluetoothConnect,
-      Permission.location,
     ].request();
-    final granted = statuses.values.every(
-      (s) => s.isGranted || s.isLimited,
-    );
+    final scan = statuses[Permission.bluetoothScan];
+    final connect = statuses[Permission.bluetoothConnect];
+    final granted = scan?.isGranted == true && connect?.isGranted == true;
     if (!granted) {
-      final denied = statuses.entries
-          .where((e) => !e.value.isGranted && !e.value.isLimited)
-          .map((e) => e.key)
-          .map((p) => p.toString())
-          .toList();
-      throw StateError(
-        'Missing Bluetooth scan permission: ${denied.join(', ')}',
-      );
+      throw StateError('Missing Bluetooth scan permission: bluetooth');
     }
   }
 

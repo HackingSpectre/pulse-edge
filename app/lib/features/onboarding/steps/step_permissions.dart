@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -15,14 +18,49 @@ class _StepPermissionsState extends State<StepPermissions> {
   bool _ble = false;
   bool _notifications = false;
 
+  @override
+  void initState() {
+    super.initState();
+    _refreshStatuses();
+  }
+
+  Future<bool> _needsLocationForBle() async {
+    if (!Platform.isAndroid) return false;
+    final info = await DeviceInfoPlugin().androidInfo;
+    return info.version.sdkInt <= 30;
+  }
+
+  Future<void> _refreshStatuses() async {
+    final needsLocation = await _needsLocationForBle();
+    final location = await Permission.location.status;
+    final scan = await Permission.bluetoothScan.status;
+    final connect = await Permission.bluetoothConnect.status;
+    final notification = await Permission.notification.status;
+    if (!mounted) return;
+    setState(() {
+      _ble = needsLocation
+          ? location.isGranted || location.isLimited
+          : scan.isGranted && connect.isGranted;
+      _notifications = notification.isGranted;
+    });
+  }
+
   Future<void> _requestBle() async {
+    final needsLocation = await _needsLocationForBle();
     final ok = await [
-      Permission.bluetoothScan,
-      Permission.bluetoothConnect,
-      Permission.location,
+      if (needsLocation) Permission.location,
+      if (!needsLocation) Permission.bluetoothScan,
+      if (!needsLocation) Permission.bluetoothConnect,
     ].request();
     setState(() {
-      _ble = ok.values.every((s) => s.isGranted || s.isLimited);
+      if (needsLocation) {
+        final status = ok[Permission.location];
+        _ble = status != null && (status.isGranted || status.isLimited);
+      } else {
+        final scan = ok[Permission.bluetoothScan];
+        final connect = ok[Permission.bluetoothConnect];
+        _ble = scan?.isGranted == true && connect?.isGranted == true;
+      }
     });
   }
 
@@ -72,8 +110,8 @@ class _StepPermissionsState extends State<StepPermissions> {
                 const SizedBox(width: T.space3),
                 Expanded(
                   child: Text(
-                    'No internet, microphone, camera, or location-tracking '
-                    'permissions are required.',
+                    'No internet, microphone, or camera permissions are required. '
+                    'Android 11 and below need location access for BLE scans.',
                     style: T.caption.copyWith(color: T.primary),
                   ),
                 ),
