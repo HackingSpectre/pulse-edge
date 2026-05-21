@@ -3235,8 +3235,7 @@ class $BaselineStatsTable extends BaselineStats
     aliasedName,
     false,
     type: DriftSqlType.double,
-    requiredDuringInsert: false,
-    defaultValue: const Constant(double.infinity),
+    requiredDuringInsert: true,
   );
   static const VerificationMeta _maxValMeta = const VerificationMeta('maxVal');
   @override
@@ -3245,8 +3244,7 @@ class $BaselineStatsTable extends BaselineStats
     aliasedName,
     false,
     type: DriftSqlType.double,
-    requiredDuringInsert: false,
-    defaultValue: const Constant(double.negativeInfinity),
+    requiredDuringInsert: true,
   );
   static const VerificationMeta _updatedAtMsMeta = const VerificationMeta(
     'updatedAtMs',
@@ -3327,12 +3325,16 @@ class $BaselineStatsTable extends BaselineStats
         _minValMeta,
         minVal.isAcceptableOrUnknown(data['min_val']!, _minValMeta),
       );
+    } else if (isInserting) {
+      context.missing(_minValMeta);
     }
     if (data.containsKey('max_val')) {
       context.handle(
         _maxValMeta,
         maxVal.isAcceptableOrUnknown(data['max_val']!, _maxValMeta),
       );
+    } else if (isInserting) {
+      context.missing(_maxValMeta);
     }
     if (data.containsKey('updated_at_ms')) {
       context.handle(
@@ -3594,13 +3596,15 @@ class BaselineStatsCompanion extends UpdateCompanion<BaselineStat> {
     this.n = const Value.absent(),
     this.mean = const Value.absent(),
     this.m2 = const Value.absent(),
-    this.minVal = const Value.absent(),
-    this.maxVal = const Value.absent(),
+    required double minVal,
+    required double maxVal,
     required int updatedAtMs,
     this.rowid = const Value.absent(),
   }) : metric = Value(metric),
        bucketTod = Value(bucketTod),
        bucketActivity = Value(bucketActivity),
+       minVal = Value(minVal),
+       maxVal = Value(maxVal),
        updatedAtMs = Value(updatedAtMs);
   static Insertable<BaselineStat> custom({
     Expression<String>? metric,
@@ -6877,8 +6881,8 @@ typedef $$BaselineStatsTableCreateCompanionBuilder =
       Value<int> n,
       Value<double> mean,
       Value<double> m2,
-      Value<double> minVal,
-      Value<double> maxVal,
+      required double minVal,
+      required double maxVal,
       required int updatedAtMs,
       Value<int> rowid,
     });
@@ -7108,8 +7112,8 @@ class $$BaselineStatsTableTableManager
                 Value<int> n = const Value.absent(),
                 Value<double> mean = const Value.absent(),
                 Value<double> m2 = const Value.absent(),
-                Value<double> minVal = const Value.absent(),
-                Value<double> maxVal = const Value.absent(),
+                required double minVal,
+                required double maxVal,
                 required int updatedAtMs,
                 Value<int> rowid = const Value.absent(),
               }) => BaselineStatsCompanion.insert(

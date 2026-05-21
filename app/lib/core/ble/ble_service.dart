@@ -467,12 +467,22 @@ class BleService {
     _notifySubs.clear();
 
     final services = await device.discoverServices();
+    final serviceIds = services
+        .map((s) => s.uuid.str.toLowerCase())
+        .toList(growable: false);
+    log.d('BLE services: ${serviceIds.join(", ")}');
     final svc = services.firstWhere(
       (s) => s.uuid.str.toLowerCase() == BleUuids.service,
       orElse: () => throw StateError(
-        'Pulse Edge service not found. Upload the PulseEdge firmware and scan again.',
+        'Pulse Edge service not found. Found: ${serviceIds.join(", ")}. '
+        'Upload the PulseEdge firmware and scan again.',
       ),
     );
+
+    final charIds = svc.characteristics
+        .map((c) => c.uuid.str.toLowerCase())
+        .toList(growable: false);
+    log.d('Pulse Edge characteristics: ${charIds.join(", ")}');
 
     Future<void> wireNotify(
       String uuid,
