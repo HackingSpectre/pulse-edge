@@ -107,10 +107,8 @@ class BaselineStats extends Table {
   IntColumn get n => integer().withDefault(const Constant(0))();
   RealColumn get mean => real().withDefault(const Constant(0))();
   RealColumn get m2 => real().withDefault(const Constant(0))(); // Welford M2
-  RealColumn get minVal =>
-      real().withDefault(const Constant(double.infinity))();
-  RealColumn get maxVal =>
-      real().withDefault(const Constant(double.negativeInfinity))();
+  RealColumn get minVal => real()();
+  RealColumn get maxVal => real()();
   IntColumn get updatedAtMs => integer()();
 
   @override

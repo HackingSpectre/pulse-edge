@@ -58,6 +58,46 @@ class _DeviceSettingsScreenState extends ConsumerState<DeviceSettingsScreen> {
     }
   }
 
+  Future<void> _forgetDevice(Device d) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Forget device?'),
+        content: Text(
+          'This will disconnect ${d.name} and remove it from your phone. '
+          'You can scan and pair again anytime.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Forget'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    final ble = ref.read(bleServiceProvider);
+    final repo = ref.read(deviceRepoProvider);
+    try {
+      await ble.stop();
+      await repo.forget();
+      if (!mounted) return;
+      setState(_results.clear);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Device forgotten.')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Forget failed: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final ble = ref.watch(bleServiceProvider);
@@ -241,10 +281,7 @@ class _DeviceSettingsScreenState extends ConsumerState<DeviceSettingsScreen> {
                       label: 'Forget device',
                       icon: Icons.delete_outline_rounded,
                       variant: NeuButtonVariant.danger,
-                      onPressed: () async {
-                        await ble.stop();
-                        await repo.forget();
-                      },
+                      onPressed: () => _forgetDevice(d),
                     ),
                   ],
                 ),

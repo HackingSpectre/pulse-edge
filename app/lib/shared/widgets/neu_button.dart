@@ -154,7 +154,7 @@ class _NeuButtonState extends State<NeuButton> with SingleTickerProviderStateMix
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTapDown: (_) => _down(),
-        onTapUp: (_) {
+        onTap: () {
           _up();
           widget.onPressed?.call();
         },
