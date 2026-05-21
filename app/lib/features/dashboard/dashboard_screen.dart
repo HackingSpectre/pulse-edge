@@ -25,10 +25,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   void initState() {
     super.initState();
     // Auto-start the demo source if no real connection is up. Lets first-launch
-    // users see the dashboard come alive immediately.
+    // users see the dashboard come alive immediately, even after a scan error.
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final ble = ref.read(bleServiceProvider);
-      if (ble.status.state == BleConnState.idle) {
+      if (ble.status.state == BleConnState.idle ||
+          ble.status.state == BleConnState.error) {
         await ble.startDemo();
       }
     });

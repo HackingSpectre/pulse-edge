@@ -121,8 +121,9 @@ class BleService {
   Stream<List<ScanResult>> scan({
     Duration timeout = const Duration(seconds: 8),
   }) async* {
+    final needsLocation = await _needsLocationForBle();
     await _ensureBluetoothReady();
-    await _ensureScanPermissions();
+    await _ensureScanPermissions(needsLocation: needsLocation);
     await FlutterBluePlus.stopScan();
     _statusSubject.add(BleStatus(state: BleConnState.scanning));
     await FlutterBluePlus.startScan(
@@ -132,7 +133,7 @@ class BleService {
       removeIfGone: const Duration(seconds: 3),
       continuousUpdates: true,
       androidLegacy: true,
-      androidUsesFineLocation: true,
+      androidUsesFineLocation: needsLocation,
     );
     yield* FlutterBluePlus.scanResults
         .map(_pulseEdgeResults)
@@ -140,10 +141,14 @@ class BleService {
         .doOnDone(() => unawaited(stopScan()));
   }
 
-  Future<void> _ensureScanPermissions() async {
-    if (!Platform.isAndroid) return;
+  Future<bool> _needsLocationForBle() async {
+    if (!Platform.isAndroid) return false;
     final info = await DeviceInfoPlugin().androidInfo;
-    final needsLocation = info.version.sdkInt <= 30;
+    return info.version.sdkInt <= 30;
+  }
+
+  Future<void> _ensureScanPermissions({required bool needsLocation}) async {
+    if (!Platform.isAndroid) return;
     if (needsLocation) {
       final status = await Permission.location.request();
       if (!status.isGranted && !status.isLimited) {

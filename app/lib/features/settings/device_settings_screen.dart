@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -10,11 +11,55 @@ import '../../core/providers.dart';
 import '../../core/theme/tokens.dart';
 import '../../shared/widgets/widgets.dart';
 
-class DeviceSettingsScreen extends ConsumerWidget {
+class DeviceSettingsScreen extends ConsumerStatefulWidget {
   const DeviceSettingsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DeviceSettingsScreen> createState() =>
+      _DeviceSettingsScreenState();
+}
+
+class _DeviceSettingsScreenState extends ConsumerState<DeviceSettingsScreen> {
+  final _results = <ScanResult>[];
+  bool _scanning = false;
+
+  Future<void> _scan() async {
+    final ble = ref.read(bleServiceProvider);
+    setState(() {
+      _scanning = true;
+      _results.clear();
+    });
+    try {
+      await for (final r in ble.scan()) {
+        if (!mounted) break;
+        setState(() {
+          _results
+            ..clear()
+            ..addAll(r);
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Scan failed: $e')));
+    }
+    if (mounted) setState(() => _scanning = false);
+  }
+
+  Future<void> _connect(ScanResult r) async {
+    try {
+      await ref.read(bleServiceProvider).connect(r.device);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Connection failed: $e')));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final ble = ref.watch(bleServiceProvider);
     final repo = ref.watch(deviceRepoProvider);
     return NeuScaffold(
@@ -90,6 +135,72 @@ class DeviceSettingsScreen extends ConsumerWidget {
               ),
             ],
           ),
+          const SizedBox(height: T.space4),
+          Row(
+            children: [
+              Expanded(
+                child: NeuButton(
+                  label: _scanning ? 'Scanning…' : 'Scan for devices',
+                  icon: Icons.bluetooth_searching_rounded,
+                  loading: _scanning,
+                  onPressed: _scanning ? null : _scan,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: T.space4),
+          if (_results.isEmpty)
+            NeuCard(
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.devices_other_rounded,
+                    size: T.iconXl,
+                    color: T.inkMuted,
+                  ),
+                  const SizedBox(height: T.space3),
+                  Text(
+                    _scanning
+                        ? 'Looking for PulseEdge nearby…'
+                        : 'No devices found yet — tap Scan to try again.',
+                    style: T.caption,
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            )
+          else
+            Column(
+              children: _results.map((r) {
+                final name = r.advertisementData.advName.isNotEmpty
+                    ? r.advertisementData.advName
+                    : (r.device.platformName.isEmpty
+                        ? 'Pulse Edge'
+                        : r.device.platformName);
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: T.space3),
+                  child: NeuCard(
+                    onTap: () => _connect(r),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.bluetooth_rounded, color: T.primary),
+                        const SizedBox(width: T.space4),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(name, style: T.bodyStrong),
+                              Text(r.device.remoteId.str, style: T.caption),
+                            ],
+                          ),
+                        ),
+                        Text('${r.rssi} dBm', style: T.caption),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
           const SizedBox(height: T.space5),
           StreamBuilder<Device?>(
             stream: repo.watchPaired(),
