@@ -22,17 +22,17 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
   DateTime _anchor = DateTime.now();
 
   Duration get _windowDuration => switch (_range) {
-        _Range.day => const Duration(days: 1),
-        _Range.week => const Duration(days: 7),
-        _Range.month => const Duration(days: 30),
-      };
+    _Range.day => const Duration(days: 1),
+    _Range.week => const Duration(days: 7),
+    _Range.month => const Duration(days: 30),
+  };
 
   String _label() => switch (_range) {
-        _Range.day => DateFormat.yMMMMd().format(_anchor),
-        _Range.week =>
-          'Week of ${DateFormat.yMMMd().format(_anchor.subtract(const Duration(days: 6)))}',
-        _Range.month => DateFormat.yMMMM().format(_anchor),
-      };
+    _Range.day => DateFormat.yMMMMd().format(_anchor),
+    _Range.week =>
+      'Week of ${DateFormat.yMMMd().format(_anchor.subtract(const Duration(days: 6)))}',
+    _Range.month => DateFormat.yMMMM().format(_anchor),
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -55,9 +55,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                   }),
                 ),
                 Expanded(
-                  child: Center(
-                    child: Text(_label(), style: T.bodyStrong),
-                  ),
+                  child: Center(child: Text(_label(), style: T.bodyStrong)),
                 ),
                 NeuIconButton(
                   icon: Icons.chevron_right_rounded,
@@ -87,7 +85,9 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
           _ChartCard(
             title: 'Heart rate (bpm)',
             color: T.danger,
-            future: repo.ppgInRange(from, to).then(
+            future: repo
+                .ppgInRange(from, to)
+                .then(
                   (samples) =>
                       samples.map((s) => _Pt(s.tsMs, s.hrBpm)).toList(),
                 ),
@@ -96,7 +96,9 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
           _ChartCard(
             title: 'Skin temperature (°C)',
             color: T.warning,
-            future: repo.tempInRange(from, to).then(
+            future: repo
+                .tempInRange(from, to)
+                .then(
                   (samples) =>
                       samples.map((s) => _Pt(s.tsMs, s.celsius)).toList(),
                 ),
@@ -137,10 +139,7 @@ class _ChartCard extends StatelessWidget {
               Container(
                 width: 8,
                 height: 8,
-                decoration: BoxDecoration(
-                  color: color,
-                  shape: BoxShape.circle,
-                ),
+                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
               ),
               const SizedBox(width: T.space2),
               Text(title.toUpperCase(), style: T.label),
@@ -154,15 +153,19 @@ class _ChartCard extends StatelessWidget {
               builder: (context, snap) {
                 if (!snap.hasData) {
                   return Center(
-                    child: Text('Loading…',
-                        style: T.caption.copyWith(color: T.inkMuted)),
+                    child: Text(
+                      'Loading…',
+                      style: T.caption.copyWith(color: T.inkMuted),
+                    ),
                   );
                 }
                 final pts = snap.data!;
                 if (pts.isEmpty) {
                   return Center(
-                    child: Text('No data in this period',
-                        style: T.caption.copyWith(color: T.inkMuted)),
+                    child: Text(
+                      'No data in this period',
+                      style: T.caption.copyWith(color: T.inkMuted),
+                    ),
                   );
                 }
                 final ys = pts.map((p) => p.value).toList()..sort();
@@ -180,17 +183,17 @@ class _ChartCard extends StatelessWidget {
                         sideTitles: SideTitles(
                           showTitles: true,
                           reservedSize: 32,
-                          getTitlesWidget: (v, _) => Text(
-                            v.toStringAsFixed(0),
-                            style: T.caption,
-                          ),
+                          getTitlesWidget: (v, _) =>
+                              Text(v.toStringAsFixed(0), style: T.caption),
                           interval: ((hiY - loY) / 4).clamp(1, 999).toDouble(),
                         ),
                       ),
                     ),
                     gridData: FlGridData(
                       show: true,
-                      horizontalInterval: ((hiY - loY) / 4).clamp(1, 999).toDouble(),
+                      horizontalInterval: ((hiY - loY) / 4)
+                          .clamp(1, 999)
+                          .toDouble(),
                       getDrawingHorizontalLine: (_) => FlLine(
                         color: T.divider,
                         strokeWidth: 1,
@@ -258,9 +261,21 @@ class _StatsCard extends ConsumerWidget {
               const SizedBox(height: T.space3),
               Row(
                 children: [
-                  _Stat(label: 'Mean', value: mean.toStringAsFixed(0), unit: 'bpm'),
-                  _Stat(label: 'Low (p10)', value: p10.toStringAsFixed(0), unit: 'bpm'),
-                  _Stat(label: 'High (p90)', value: p90.toStringAsFixed(0), unit: 'bpm'),
+                  _Stat(
+                    label: 'Mean',
+                    value: mean.toStringAsFixed(0),
+                    unit: 'bpm',
+                  ),
+                  _Stat(
+                    label: 'Low (p10)',
+                    value: p10.toStringAsFixed(0),
+                    unit: 'bpm',
+                  ),
+                  _Stat(
+                    label: 'High (p90)',
+                    value: p90.toStringAsFixed(0),
+                    unit: 'bpm',
+                  ),
                 ],
               ),
             ],

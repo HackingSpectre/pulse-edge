@@ -19,6 +19,7 @@ class ProfileEditScreen extends ConsumerStatefulWidget {
 
 class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
   final _name = TextEditingController();
+  final _username = TextEditingController();
   final _height = TextEditingController();
   final _weight = TextEditingController();
   int _sex = 0;
@@ -32,6 +33,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
     if (p == null) return;
     setState(() {
       _name.text = p.name;
+      _username.text = p.username == null ? '' : '@${p.username}';
       _sex = p.sex;
       _birthYear = p.birthYear;
       _height.text = p.heightCm?.toStringAsFixed(0) ?? '';
@@ -48,22 +50,42 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
   @override
   void dispose() {
     _name.dispose();
+    _username.dispose();
     _height.dispose();
     _weight.dispose();
     super.dispose();
   }
 
   Future<void> _save() async {
-    await ref.read(profileRepoProvider).save(ProfilesCompanion(
-          name: Value(_name.text.trim().isEmpty ? 'Friend' : _name.text.trim()),
-          sex: Value(_sex),
-          birthYear: Value(_birthYear),
-          heightCm: Value(double.tryParse(_height.text)),
-          weightKg: Value(double.tryParse(_weight.text)),
-          createdAtMs: Value(DateTime.now().millisecondsSinceEpoch),
-        ));
+    await ref
+        .read(profileRepoProvider)
+        .save(
+          ProfilesCompanion(
+            name: Value(_cleanName(_name.text)),
+            username: Value(_cleanUsername(_username.text)),
+            sex: Value(_sex),
+            birthYear: Value(_birthYear),
+            heightCm: Value(double.tryParse(_height.text)),
+            weightKg: Value(double.tryParse(_weight.text)),
+            createdAtMs: Value(DateTime.now().millisecondsSinceEpoch),
+          ),
+        );
     if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Profile updated.')));
     context.go(Routes.settings);
+  }
+
+  String _cleanName(String value) {
+    final trimmed = value.trim();
+    return trimmed.isEmpty ? 'Friend' : trimmed;
+  }
+
+  String? _cleanUsername(String value) {
+    final username = value.trim().replaceAll(RegExp(r'\s+'), '_');
+    if (username.isEmpty) return null;
+    return username.startsWith('@') ? username.substring(1) : username;
   }
 
   @override
@@ -81,6 +103,13 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
             controller: _name,
             label: 'Name',
             icon: Icons.person_rounded,
+          ),
+          const SizedBox(height: T.space5),
+          NeuTextField(
+            controller: _username,
+            label: 'Username',
+            hint: 'optional',
+            icon: Icons.alternate_email_rounded,
           ),
           const SizedBox(height: T.space5),
           Text('Sex assigned at birth'.toUpperCase(), style: T.label),

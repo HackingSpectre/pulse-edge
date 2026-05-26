@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pulse_edge/core/alerts/alert_severity.dart';
+import 'package:pulse_edge/core/llm/scripted_assistant.dart';
 import 'package:pulse_edge/core/ml/feature_window.dart';
 
 void main() {
@@ -54,6 +55,36 @@ void main() {
         activity: 0,
       );
       expect(w.toModelInput()[6], 65); // index 6 is spo2Mean
+    });
+  });
+
+  group('ScriptedAssistant', () {
+    test('uses live health context and user name in fallback responses', () {
+      const ctx = HealthChatContext(
+        profileName: 'Ada',
+        username: 'ada',
+        liveHr: 82,
+        liveSpo2: 98,
+        liveTemp: 36.4,
+        liveActivity: 0,
+        deviceState: 'connected',
+        sampleCount: 3,
+        hrMin: 78,
+        hrMedian: 81,
+        hrMax: 84,
+        spo2Min: 97,
+        spo2Mean: 98,
+        tempMean: 36.3,
+        tempMin: 36.1,
+        tempMax: 36.5,
+        motionMean: 1.0,
+      );
+
+      final reply = ScriptedAssistant.reply('How am I today?', context: ctx);
+
+      expect(reply, contains('Ada'));
+      expect(reply, contains('82 bpm'));
+      expect(reply, contains('98%'));
     });
   });
 }

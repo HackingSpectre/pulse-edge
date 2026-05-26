@@ -8,6 +8,8 @@ library;
 
 export 'neu_bottom_nav.dart';
 export 'neu_button.dart';
+export 'chassis_painter.dart';
+export 'industrial_stripes.dart';
 export 'neu_chip.dart';
 export 'neu_empty_state.dart';
 export 'neu_list_tile.dart';

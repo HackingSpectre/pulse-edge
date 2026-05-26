@@ -27,17 +27,22 @@ class AppDb extends _$AppDb {
   AppDb.forTesting(super.e);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
+    onUpgrade: (m, from, to) async {
+      if (from < 2) {
+        await m.addColumn(profiles, profiles.username);
+      }
+    },
     beforeOpen: (details) async {
       // Sensible runtime knobs for time-series workloads.
       await customStatement('PRAGMA journal_mode = WAL');
       await customStatement('PRAGMA synchronous = NORMAL');
       await customStatement('PRAGMA temp_store = MEMORY');
       await customStatement('PRAGMA mmap_size = 134217728'); // 128 MB
-      // Indexes — drift creates the tables; we add hot-path indexes here.
+      // Indexes - drift creates the tables; we add hot-path indexes here.
       await customStatement(
         'CREATE INDEX IF NOT EXISTS idx_ppg_ts ON ppg_samples (device_id, ts_ms)',
       );

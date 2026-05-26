@@ -3,16 +3,17 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
 import '../../core/theme/tokens.dart';
+import 'industrial_stripes.dart';
 
 /// The visual depth mode of a [NeuSurface].
 enum NeuDepth {
-  /// Extruded outward — the default for cards, buttons at rest.
+  /// Extruded outward - the default for cards, buttons at rest.
   raised,
 
-  /// No shadows — flat plate. Used for backgrounds inside already-raised cards.
+  /// No shadows - flat plate. Used for backgrounds inside already-raised cards.
   flat,
 
-  /// Pressed inward — used for active toggles, focused inputs, and the
+  /// Pressed inward - used for active toggles, focused inputs, and the
   /// "depressed" state of [NeuButton] when held.
   sunken,
 }
@@ -28,7 +29,7 @@ enum NeuSize { sm, md, lg }
 /// `BoxShadow` is outer-only).
 ///
 /// Anti-pattern (do NOT do): drawing a hard border, gradient fill, or any
-/// color other than the surface tones — neumorphism's whole point is that
+/// color other than the surface tones - neumorphism's whole point is that
 /// shadow shape carries hierarchy, not color contrast.
 class NeuSurface extends StatelessWidget {
   const NeuSurface({
@@ -42,6 +43,8 @@ class NeuSurface extends StatelessWidget {
     this.height,
     this.alignment,
     this.clipBehavior = Clip.none,
+    this.renderStripes = false,
+    this.slantRight,
     this.child,
   });
 
@@ -54,6 +57,8 @@ class NeuSurface extends StatelessWidget {
   final double? height;
   final AlignmentGeometry? alignment;
   final Clip clipBehavior;
+  final bool renderStripes;
+  final bool? slantRight;
   final Widget? child;
 
   List<BoxShadow> _shadows() {
@@ -92,16 +97,38 @@ class NeuSurface extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final fill = color ?? T.surface;
+    final stripeColor = Theme.of(context).brightness == Brightness.dark
+        ? Colors.white.withValues(alpha: 0.04)
+        : Colors.black.withValues(alpha: 0.04);
 
     Widget content = child ?? const SizedBox.shrink();
     if (padding != null) content = Padding(padding: padding!, child: content);
-    if (alignment != null) content = Align(alignment: alignment!, child: content);
+    if (alignment != null) {
+      content = Align(alignment: alignment!, child: content);
+    }
 
-    if (clipBehavior != Clip.none) {
+    if (clipBehavior != Clip.none || renderStripes) {
       content = ClipRRect(
         borderRadius: borderRadius,
-        clipBehavior: clipBehavior,
+        clipBehavior: clipBehavior == Clip.none ? Clip.hardEdge : clipBehavior,
         child: content,
+      );
+    }
+
+    if (renderStripes) {
+      content = Stack(
+        fit: StackFit.passthrough,
+        children: [
+          Positioned.fill(
+            child: CustomPaint(
+              painter: IndustrialStripePainter(
+                color: stripeColor,
+                slantRight: slantRight ?? false,
+              ),
+            ),
+          ),
+          content,
+        ],
       );
     }
 
@@ -116,10 +143,7 @@ class NeuSurface extends StatelessWidget {
             blur: _insetBlur(),
             offset: _insetOffset(),
           ),
-          child: ClipRRect(
-            borderRadius: borderRadius,
-            child: content,
-          ),
+          child: ClipRRect(borderRadius: borderRadius, child: content),
         ),
       );
     }
@@ -140,7 +164,7 @@ class NeuSurface extends StatelessWidget {
 /// CustomPainter that fakes an inset (inner) shadow inside a rounded rect.
 ///
 /// Strategy: fill with the surface color, then over the top draw two
-/// large blurred-edge rects clipped to the inverse of the inner area —
+/// large blurred-edge rects clipped to the inverse of the inner area -
 /// one bright (top-left), one dark (bottom-right). The result reads as
 /// if the surface has been pressed into the canvas.
 class _InsetShadowPainter extends CustomPainter {
@@ -161,7 +185,7 @@ class _InsetShadowPainter extends CustomPainter {
     final rect = Offset.zero & size;
     final rrect = borderRadius.toRRect(rect);
 
-    // Base fill — same hue as surrounding canvas.
+    // Base fill - same hue as surrounding canvas.
     canvas.drawRRect(rrect, Paint()..color = color);
 
     canvas.save();
@@ -203,7 +227,11 @@ class _InsetShadowPainter extends CustomPainter {
       ..maskFilter = MaskFilter.blur(BlurStyle.normal, blur);
     final outerPath = Path()..addRect(rect.inflate(blur * 4));
     final innerPath = Path()..addRRect(rrect.shift(shadowOffset));
-    final shadowPath = Path.combine(PathOperation.difference, outerPath, innerPath);
+    final shadowPath = Path.combine(
+      PathOperation.difference,
+      outerPath,
+      innerPath,
+    );
     canvas.drawPath(shadowPath, paint);
   }
 
@@ -227,6 +255,8 @@ class NeuCard extends StatelessWidget {
     this.size = NeuSize.md,
     this.color,
     this.onTap,
+    this.renderStripes = true,
+    this.slantRight,
     required this.child,
   });
 
@@ -236,6 +266,8 @@ class NeuCard extends StatelessWidget {
   final NeuSize size;
   final Color? color;
   final VoidCallback? onTap;
+  final bool renderStripes;
+  final bool? slantRight;
   final Widget child;
 
   @override
@@ -246,15 +278,13 @@ class NeuCard extends StatelessWidget {
       borderRadius: borderRadius,
       padding: padding,
       color: color,
+      renderStripes: renderStripes,
+      slantRight: slantRight,
       child: child,
     );
     final tap = onTap;
     if (tap == null) return surface;
-    return _PressShrink(
-      onTap: tap,
-      borderRadius: borderRadius,
-      child: surface,
-    );
+    return _PressShrink(onTap: tap, borderRadius: borderRadius, child: surface);
   }
 }
 
@@ -275,7 +305,8 @@ class _PressShrink extends StatefulWidget {
   State<_PressShrink> createState() => _PressShrinkState();
 }
 
-class _PressShrinkState extends State<_PressShrink> with SingleTickerProviderStateMixin {
+class _PressShrinkState extends State<_PressShrink>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _c = AnimationController(
     vsync: this,
     duration: T.motionFast,

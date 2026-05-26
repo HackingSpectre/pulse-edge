@@ -24,7 +24,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     _Msg(
       role: _Role.assistant,
       text:
-          'Hi — I\'m your on-device assistant. Ask me about your wearable '
+          'Hi. I am your on-device assistant. Ask me about your wearable '
           'data, or pick a suggestion below.',
     ),
   ];
@@ -34,7 +34,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   @override
   void initState() {
     super.initState();
-    // Start loading the model in the background — won't block UI.
+    // Start loading the model in the background. This will not block UI.
     Future.microtask(() => ref.read(llmServiceProvider).ensureLoaded());
   }
 
@@ -99,7 +99,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             setState(() {
               _messages.last = _Msg(
                 role: _Role.assistant,
-                text: 'Sorry — something went wrong: $e',
+                text: 'Sorry, something went wrong: $e',
               );
               _busy = false;
             });
@@ -173,9 +173,9 @@ class _StatusBanner extends ConsumerWidget {
         final label = switch (s) {
           LlmStatus.loadingModel => 'Warming up the assistant…',
           LlmStatus.missingModel =>
-            'Rule-based assistant active — install the AI model for richer chat.',
+            'Rule-based assistant active. Download the offline edge model for richer chat.',
           LlmStatus.failed =>
-            'Assistant failed to load. Tap settings to redownload.',
+            'Assistant failed to load. Tap settings to retry.',
           _ => '',
         };
         return Padding(

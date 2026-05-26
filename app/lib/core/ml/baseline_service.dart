@@ -37,12 +37,14 @@ class BaselineService {
     double x,
     int nowMs,
   ) async {
-    final existing = await (_db.select(_db.baselineStats)
-          ..where((t) =>
-              t.metric.equals(metric) &
-              t.bucketTod.equals(tod) &
-              t.bucketActivity.equals(act)))
-        .getSingleOrNull();
+    final existing =
+        await (_db.select(_db.baselineStats)..where(
+              (t) =>
+                  t.metric.equals(metric) &
+                  t.bucketTod.equals(tod) &
+                  t.bucketActivity.equals(act),
+            ))
+            .getSingleOrNull();
 
     final n = (existing?.n ?? 0) + 1;
     final prevMean = existing?.mean ?? 0.0;
@@ -54,7 +56,9 @@ class BaselineService {
     final minV = math.min(existing?.minVal ?? double.infinity, x);
     final maxV = math.max(existing?.maxVal ?? double.negativeInfinity, x);
 
-    await _db.into(_db.baselineStats).insertOnConflictUpdate(
+    await _db
+        .into(_db.baselineStats)
+        .insertOnConflictUpdate(
           BaselineStatsCompanion(
             metric: Value(metric),
             bucketTod: Value(tod),
@@ -77,12 +81,14 @@ class BaselineService {
     required int activity,
     required double value,
   }) async {
-    final row = await (_db.select(_db.baselineStats)
-          ..where((t) =>
-              t.metric.equals(metric) &
-              t.bucketTod.equals(tod) &
-              t.bucketActivity.equals(activity)))
-        .getSingleOrNull();
+    final row =
+        await (_db.select(_db.baselineStats)..where(
+              (t) =>
+                  t.metric.equals(metric) &
+                  t.bucketTod.equals(tod) &
+                  t.bucketActivity.equals(activity),
+            ))
+            .getSingleOrNull();
     if (row == null || row.n < 30) return null;
     final variance = row.m2 / (row.n - 1);
     if (variance <= 0) return null;
@@ -105,7 +111,8 @@ class BaselineService {
     final firstMs = row.readNullable<int>('firstMs');
     if (n < 4 || firstMs == null) return false;
     final ageDays =
-        (DateTime.now().millisecondsSinceEpoch - firstMs) / (1000 * 60 * 60 * 24);
+        (DateTime.now().millisecondsSinceEpoch - firstMs) /
+        (1000 * 60 * 60 * 24);
     return ageDays >= warmupDays;
   }
 }

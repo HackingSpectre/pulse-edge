@@ -7,13 +7,10 @@ import 'feature_window.dart';
 /// Aggregates streaming sensor frames into 30-second feature windows with a
 /// 5-second hop (matches the WESAD training pipeline in /ml/anomaly).
 ///
-/// Holds a small in-memory ring per metric. No drift writes here — the
+/// Holds a small in-memory ring per metric. No drift writes here - the
 /// service layer above persists raw samples; this class is purely numeric.
 class FeatureExtractor {
-  FeatureExtractor({
-    this.windowSeconds = 30,
-    this.hopSeconds = 5,
-  });
+  FeatureExtractor({this.windowSeconds = 30, this.hopSeconds = 5});
 
   final int windowSeconds;
   final int hopSeconds;
@@ -74,18 +71,27 @@ class FeatureExtractor {
     final hrMin = _hr.reduce(math.min);
     final hrMax = _hr.reduce(math.max);
 
-    // RR-interval proxy from HR samples — RMSSD + pNN50 are HRV staples.
+    // RR-interval proxy from HR samples - RMSSD + pNN50 are HRV staples.
     // We approximate from successive HR estimates rather than full RR.
-    final rr = <double>[for (final h in _hr) if (h > 0) 60000.0 / h];
-    final rrDiffs = <double>[for (var i = 1; i < rr.length; i++) (rr[i] - rr[i - 1]).abs()];
+    final rr = <double>[
+      for (final h in _hr)
+        if (h > 0) 60000.0 / h,
+    ];
+    final rrDiffs = <double>[
+      for (var i = 1; i < rr.length; i++) (rr[i] - rr[i - 1]).abs(),
+    ];
     final rmssd = rrDiffs.isEmpty
         ? 0.0
-        : math.sqrt(rrDiffs.map((d) => d * d).reduce((a, b) => a + b) / rrDiffs.length);
+        : math.sqrt(
+            rrDiffs.map((d) => d * d).reduce((a, b) => a + b) / rrDiffs.length,
+          );
     final pnn50 = rrDiffs.isEmpty
         ? 0.0
         : rrDiffs.where((d) => d > 50).length / rrDiffs.length;
 
-    final spo2Mean = _spo2.isEmpty ? null : _spo2.reduce((a, b) => a + b) / _spo2.length;
+    final spo2Mean = _spo2.isEmpty
+        ? null
+        : _spo2.reduce((a, b) => a + b) / _spo2.length;
 
     // Temperature mean + linear slope (°C / s).
     final tempVals = _temp.map((t) => t.value).toList();
@@ -95,7 +101,7 @@ class FeatureExtractor {
     final tempSlope = _temp.length < 2
         ? 0.0
         : (_temp.last.value - _temp.first.value) /
-            ((_temp.last.tsMs - _temp.first.tsMs) / 1000.0);
+              ((_temp.last.tsMs - _temp.first.tsMs) / 1000.0);
 
     final accelMean = _imuMag.isEmpty
         ? 1.0
@@ -106,25 +112,27 @@ class FeatureExtractor {
 
     final activity = _classifyActivity(accelMean, accelStd);
 
-    _windows.add(FeatureWindow(
-      tsMs: nowMs,
-      windowS: windowSeconds,
-      hrMean: hrMean,
-      hrStd: hrStd,
-      hrMin: hrMin,
-      hrMax: hrMax,
-      rmssd: rmssd,
-      pnn50: pnn50,
-      spo2Mean: spo2Mean,
-      tempMean: tempMean,
-      tempSlope: tempSlope,
-      accelMean: accelMean,
-      accelStd: accelStd,
-      activity: activity,
-    ));
+    _windows.add(
+      FeatureWindow(
+        tsMs: nowMs,
+        windowS: windowSeconds,
+        hrMean: hrMean,
+        hrStd: hrStd,
+        hrMin: hrMin,
+        hrMax: hrMax,
+        rmssd: rmssd,
+        pnn50: pnn50,
+        spo2Mean: spo2Mean,
+        tempMean: tempMean,
+        tempSlope: tempSlope,
+        accelMean: accelMean,
+        accelStd: accelStd,
+        activity: activity,
+      ),
+    );
   }
 
-  /// Conservative thresholding — replaced by a tiny TFLite classifier in v2.
+  /// Conservative thresholding - replaced by a tiny TFLite classifier in v2.
   int _classifyActivity(double accelMean, double accelStd) {
     if (accelStd > 1.5 || accelMean > 1.8) return 2; // running
     if (accelStd > 0.4 || accelMean > 1.2) return 1; // walking
@@ -133,7 +141,8 @@ class FeatureExtractor {
 
   double _stddev(List<double> xs, double mean) {
     if (xs.length < 2) return 0;
-    final v = xs.map((x) => (x - mean) * (x - mean)).reduce((a, b) => a + b) /
+    final v =
+        xs.map((x) => (x - mean) * (x - mean)).reduce((a, b) => a + b) /
         (xs.length - 1);
     return math.sqrt(v);
   }

@@ -5,7 +5,12 @@ import '../../core/theme/tokens.dart';
 import 'neu_surface.dart';
 
 class NeuNavItem {
-  const NeuNavItem({required this.icon, required this.activeIcon, required this.label, this.badge});
+  const NeuNavItem({
+    required this.icon,
+    required this.activeIcon,
+    required this.label,
+    this.badge,
+  });
   final IconData icon;
   final IconData activeIcon;
   final String label;
@@ -30,12 +35,20 @@ class NeuBottomNav extends StatelessWidget {
     return SafeArea(
       top: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(T.space4, T.space2, T.space4, T.space3),
+        padding: const EdgeInsets.fromLTRB(
+          T.space4,
+          T.space2,
+          T.space4,
+          T.space3,
+        ),
         child: NeuSurface(
           depth: NeuDepth.raised,
           size: NeuSize.md,
           borderRadius: T.brPill,
-          padding: const EdgeInsets.symmetric(horizontal: T.space2, vertical: T.space2),
+          padding: const EdgeInsets.symmetric(
+            horizontal: T.space2,
+            vertical: T.space2,
+          ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
@@ -56,7 +69,11 @@ class NeuBottomNav extends StatelessWidget {
 }
 
 class _NavTab extends StatelessWidget {
-  const _NavTab({required this.item, required this.selected, required this.onTap});
+  const _NavTab({
+    required this.item,
+    required this.selected,
+    required this.onTap,
+  });
 
   final NeuNavItem item;
   final bool selected;
@@ -81,7 +98,9 @@ class _NavTab extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: T.space3),
           decoration: BoxDecoration(
             borderRadius: T.brPill,
-            color: selected ? T.primary.withValues(alpha: 0.10) : Colors.transparent,
+            color: selected
+                ? T.primary.withValues(alpha: 0.10)
+                : Colors.transparent,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -112,11 +131,14 @@ class _NavTab extends StatelessWidget {
                           borderRadius: T.brPill,
                           border: Border.all(color: T.surface, width: 2),
                         ),
-                        constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                        constraints: const BoxConstraints(
+                          minWidth: 18,
+                          minHeight: 18,
+                        ),
                         alignment: Alignment.center,
                         child: Text(
                           item.badge! > 9 ? '9+' : '${item.badge}',
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: T.inkInverse,
                             fontFamily: T.fontBody,
                             fontSize: 10,

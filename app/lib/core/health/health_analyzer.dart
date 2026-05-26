@@ -3,14 +3,20 @@ import 'package:flutter/material.dart';
 import '../theme/tokens.dart';
 
 enum HealthLevel {
-  stable('Stable', T.success),
-  watch('Watch', T.info),
-  caution('Caution', T.warning),
-  attention('Attention', T.danger);
+  stable('Stable'),
+  watch('Watch'),
+  caution('Caution'),
+  attention('Attention');
 
-  const HealthLevel(this.label, this.color);
+  const HealthLevel(this.label);
   final String label;
-  final Color color;
+
+  Color get color => switch (this) {
+    HealthLevel.stable => T.success,
+    HealthLevel.watch => T.info,
+    HealthLevel.caution => T.warning,
+    HealthLevel.attention => T.danger,
+  };
 }
 
 class HealthAssessment {

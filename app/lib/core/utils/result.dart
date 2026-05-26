@@ -3,8 +3,14 @@ sealed class Result<T> {
   const Result();
   bool get isOk => this is Ok<T>;
   bool get isErr => this is Err<T>;
-  T? get value => switch (this) { Ok<T>(:final v) => v, _ => null };
-  String? get error => switch (this) { Err<T>(:final message) => message, _ => null };
+  T? get value => switch (this) {
+    Ok<T>(:final v) => v,
+    _ => null,
+  };
+  String? get error => switch (this) {
+    Err<T>(:final message) => message,
+    _ => null,
+  };
 }
 
 class Ok<T> extends Result<T> {

@@ -19,7 +19,7 @@ class StepDone extends StatelessWidget {
               size: NeuSize.lg,
               borderRadius: BorderRadius.circular(80),
               padding: const EdgeInsets.all(T.space7),
-              child: const Icon(
+              child: Icon(
                 Icons.celebration_rounded,
                 size: 56,
                 color: T.success,
@@ -30,8 +30,8 @@ class StepDone extends StatelessWidget {
             const SizedBox(height: T.space3),
             Text(
               'The dashboard shows live readings. The Chat tab is your AI '
-              'assistant — it will need a one-time download from Settings to '
-              'come fully online.',
+              'assistant. Download the offline edge model from Settings for '
+              'richer local answers.',
               style: T.bodySoft,
               textAlign: TextAlign.center,
             ),

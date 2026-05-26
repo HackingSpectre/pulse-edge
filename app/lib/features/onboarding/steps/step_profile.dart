@@ -12,11 +12,12 @@ class StepProfile extends ConsumerStatefulWidget {
   const StepProfile({super.key});
 
   @override
-  ConsumerState<StepProfile> createState() => _StepProfileState();
+  ConsumerState<StepProfile> createState() => StepProfileState();
 }
 
-class _StepProfileState extends ConsumerState<StepProfile> {
+class StepProfileState extends ConsumerState<StepProfile> {
   final _name = TextEditingController();
+  final _username = TextEditingController();
   final _height = TextEditingController();
   final _weight = TextEditingController();
   int _sex = 0;
@@ -25,15 +26,21 @@ class _StepProfileState extends ConsumerState<StepProfile> {
   @override
   void dispose() {
     _name.dispose();
+    _username.dispose();
     _height.dispose();
     _weight.dispose();
     super.dispose();
   }
 
-  Future<void> _save() async {
-    await ref.read(profileRepoProvider).save(
+  Future<void> save() async {
+    final name = _cleanName(_name.text);
+    final username = _cleanUsername(_username.text);
+    await ref
+        .read(profileRepoProvider)
+        .save(
           ProfilesCompanion(
-            name: Value(_name.text.trim().isEmpty ? 'Friend' : _name.text.trim()),
+            name: Value(name),
+            username: Value(username),
             sex: Value(_sex),
             birthYear: Value(_birthYear),
             heightCm: Value(double.tryParse(_height.text)),
@@ -41,6 +48,17 @@ class _StepProfileState extends ConsumerState<StepProfile> {
             createdAtMs: Value(DateTime.now().millisecondsSinceEpoch),
           ),
         );
+  }
+
+  String _cleanName(String value) {
+    final trimmed = value.trim();
+    return trimmed.isEmpty ? 'Friend' : trimmed;
+  }
+
+  String? _cleanUsername(String value) {
+    final username = value.trim().replaceAll(RegExp(r'\s+'), '_');
+    if (username.isEmpty) return null;
+    return username.startsWith('@') ? username.substring(1) : username;
   }
 
   @override
@@ -54,7 +72,7 @@ class _StepProfileState extends ConsumerState<StepProfile> {
           Text('A bit about you', style: T.h1),
           const SizedBox(height: T.space2),
           Text(
-            'Used to seed your personal baseline. Stored only on this phone — '
+            'Used to seed your personal baseline. Stored only on this phone. '
             'we never sync it.',
             style: T.bodySoft,
           ),
@@ -65,7 +83,15 @@ class _StepProfileState extends ConsumerState<StepProfile> {
             hint: 'e.g. Adaeze',
             icon: Icons.person_rounded,
             textInputAction: TextInputAction.next,
-            onSubmitted: (_) => _save(),
+            onSubmitted: (_) => save(),
+          ),
+          const SizedBox(height: T.space5),
+          NeuTextField(
+            controller: _username,
+            label: 'Username',
+            hint: 'optional',
+            icon: Icons.alternate_email_rounded,
+            textInputAction: TextInputAction.next,
           ),
           const SizedBox(height: T.space5),
           Text('Sex assigned at birth'.toUpperCase(), style: T.label),

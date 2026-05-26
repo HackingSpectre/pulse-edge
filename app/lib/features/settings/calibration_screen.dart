@@ -52,8 +52,8 @@ class _CalibrationScreenState extends ConsumerState<CalibrationScreen> {
                     _warmedUp == null
                         ? 'Loading…'
                         : (_warmedUp!
-                            ? 'Baseline established. Pattern detector is on.'
-                            : 'Still learning. The first 7 days build your baseline.'),
+                              ? 'Baseline established. Pattern detector is on.'
+                              : 'Still learning. The first 7 days build your baseline.'),
                     style: T.bodyStrong.copyWith(
                       color: _warmedUp == true ? T.success : T.warning,
                     ),

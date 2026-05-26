@@ -26,7 +26,7 @@ class ModelSettingsScreen extends ConsumerWidget {
     final dl = ref.watch(modelDownloadProvider);
     final llm = ref.watch(llmServiceProvider);
     return NeuScaffold(
-      title: 'AI assistant',
+      title: 'Offline model',
       showBack: true,
       onBack: () => context.go(Routes.settings),
       scrollable: true,
@@ -37,14 +37,17 @@ class ModelSettingsScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(dl.bundle.name, style: T.h3),
+                const Text('Offline edge model', style: T.h3),
                 const SizedBox(height: 2),
                 Text(dl.bundle.notes, style: T.caption),
                 const SizedBox(height: T.space3),
                 Row(
                   children: [
-                    const Icon(Icons.cloud_download_rounded,
-                        size: T.iconSm, color: T.inkMuted),
+                    Icon(
+                      Icons.cloud_download_rounded,
+                      size: T.iconSm,
+                      color: T.inkMuted,
+                    ),
                     const SizedBox(width: T.space2),
                     Text(_bytes(dl.bundle.sizeBytes), style: T.caption),
                   ],
@@ -63,8 +66,7 @@ class ModelSettingsScreen extends ConsumerWidget {
                   return _ActionBlock(
                     title: 'Not installed',
                     subtitle:
-                        'The assistant runs on your phone — no servers, no '
-                        'subscriptions. Around 720 MB to download once.',
+                        'Download once to let the assistant answer with the local edge model. It runs on this phone.',
                     primary: NeuButton(
                       label: 'Download now',
                       icon: Icons.download_rounded,
@@ -81,8 +83,10 @@ class ModelSettingsScreen extends ConsumerWidget {
                       const SizedBox(height: T.space2),
                       Row(
                         children: [
-                          Text('${(p.fraction * 100).toStringAsFixed(0)}%',
-                              style: T.bodyStrong),
+                          Text(
+                            '${(p.fraction * 100).toStringAsFixed(0)}%',
+                            style: T.bodyStrong,
+                          ),
                           const Spacer(),
                           Text(
                             '${_bytes(p.received)} / ${_bytes(p.total)}',
@@ -132,8 +136,7 @@ class ModelSettingsScreen extends ConsumerWidget {
                         color: T.successSoft,
                         child: Row(
                           children: [
-                            const Icon(Icons.check_circle_rounded,
-                                color: T.success),
+                            Icon(Icons.check_circle_rounded, color: T.success),
                             const SizedBox(width: T.space3),
                             Expanded(
                               child: Text(
@@ -190,7 +193,7 @@ class ModelSettingsScreen extends ConsumerWidget {
                 LlmStatus.uninitialized => 'Not loaded yet',
                 LlmStatus.loadingModel => 'Loading…',
                 LlmStatus.ready => 'Ready',
-                LlmStatus.missingModel => 'Model not installed',
+                LlmStatus.missingModel => 'Not installed',
                 LlmStatus.failed => 'Failed to load',
               };
               return NeuCard(
@@ -199,10 +202,15 @@ class ModelSettingsScreen extends ConsumerWidget {
                     Container(
                       width: 10,
                       height: 10,
-                      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+                      decoration: BoxDecoration(
+                        color: color,
+                        shape: BoxShape.circle,
+                      ),
                     ),
                     const SizedBox(width: T.space3),
-                    Expanded(child: Text('Runtime: $label', style: T.bodyStrong)),
+                    Expanded(
+                      child: Text('Runtime: $label', style: T.bodyStrong),
+                    ),
                   ],
                 ),
               );

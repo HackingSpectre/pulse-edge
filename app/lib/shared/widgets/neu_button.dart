@@ -48,7 +48,8 @@ class NeuButton extends StatefulWidget {
   State<NeuButton> createState() => _NeuButtonState();
 }
 
-class _NeuButtonState extends State<NeuButton> with SingleTickerProviderStateMixin {
+class _NeuButtonState extends State<NeuButton>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _c = AnimationController(
     vsync: this,
     duration: T.motionFast,
@@ -85,11 +86,20 @@ class _NeuButtonState extends State<NeuButton> with SingleTickerProviderStateMix
   EdgeInsets _padding() {
     switch (widget.size) {
       case NeuSize.sm:
-        return const EdgeInsets.symmetric(horizontal: T.space4, vertical: T.space3);
+        return const EdgeInsets.symmetric(
+          horizontal: T.space4,
+          vertical: T.space3,
+        );
       case NeuSize.md:
-        return const EdgeInsets.symmetric(horizontal: T.space6, vertical: T.space4);
+        return const EdgeInsets.symmetric(
+          horizontal: T.space6,
+          vertical: T.space4,
+        );
       case NeuSize.lg:
-        return const EdgeInsets.symmetric(horizontal: T.space7, vertical: T.space5);
+        return const EdgeInsets.symmetric(
+          horizontal: T.space7,
+          vertical: T.space5,
+        );
     }
   }
 
@@ -132,8 +142,8 @@ class _NeuButtonState extends State<NeuButton> with SingleTickerProviderStateMix
         final depth = !widget._enabled
             ? NeuDepth.flat
             : pressed
-                ? NeuDepth.sunken
-                : NeuDepth.raised;
+            ? NeuDepth.sunken
+            : NeuDepth.raised;
         return NeuSurface(
           depth: depth,
           size: widget.size,
@@ -219,7 +229,8 @@ class NeuIconButton extends StatefulWidget {
   State<NeuIconButton> createState() => _NeuIconButtonState();
 }
 
-class _NeuIconButtonState extends State<NeuIconButton> with SingleTickerProviderStateMixin {
+class _NeuIconButtonState extends State<NeuIconButton>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _c = AnimationController(
     vsync: this,
     duration: T.motionFast,
@@ -250,8 +261,8 @@ class _NeuIconButtonState extends State<NeuIconButton> with SingleTickerProvider
           depth: widget.onPressed == null
               ? NeuDepth.flat
               : pressed
-                  ? NeuDepth.sunken
-                  : NeuDepth.raised,
+              ? NeuDepth.sunken
+              : NeuDepth.raised,
           size: NeuSize.sm,
           borderRadius: BorderRadius.circular(widget.size / 2),
           width: widget.size,
@@ -260,7 +271,8 @@ class _NeuIconButtonState extends State<NeuIconButton> with SingleTickerProvider
           child: Icon(
             widget.icon,
             size: widget.iconSize,
-            color: widget.color ??
+            color:
+                widget.color ??
                 (widget.onPressed == null ? T.inkDisabled : T.ink),
           ),
         );

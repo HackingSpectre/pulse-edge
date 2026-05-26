@@ -9,7 +9,7 @@ import 'sensor_packet.dart';
 /// Heart rate gently drifts with a circadian baseline + 1/f noise; an
 /// activity engine bumps HR + accel magnitude during scripted "walk" and
 /// "exercise" phases. Temperature wanders ±0.4°C around 33.8°C (skin temp).
-/// SpO₂ stays in a normal 96–99% band.
+/// SpO₂ stays in a normal 96-99% band.
 ///
 /// Periodically (~every 90 s) injects a brief tachycardia burst so the
 /// alert pipeline can be exercised end-to-end during the demo.
@@ -84,7 +84,7 @@ class MockDeviceSource {
       _ => 0.0,
     };
 
-    // Anomaly injection — short tachycardia spike.
+    // Anomaly injection - short tachycardia spike.
     final spike =
         injectAnomalies && _ticksSinceAnomaly > 360 && _ticksSinceAnomaly < 380
         ? 60.0

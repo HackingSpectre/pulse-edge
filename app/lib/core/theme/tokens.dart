@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 /// Design tokens for the neumorphism design system.
 ///
 /// All component styling must read from this file. Do not hard-code colors,
-/// spacing, type sizes, or radii anywhere in the app — the entire visual
+/// spacing, type sizes, or radii anywhere in the app - the entire visual
 /// language is intended to be re-skinnable from here.
 ///
 /// Source: design-system skill at `.agents/skills/design-system/SKILL.md`.
@@ -11,50 +11,90 @@ class T {
   T._();
 
   // ────────────────────────────────────────────────────────────────────────
-  // COLOR — primary, secondary, semantic, surface, ink
+  // COLOR - primary, secondary, semantic, surface, ink
   // ────────────────────────────────────────────────────────────────────────
 
-  /// Brand teal. Used for primary CTAs, focus rings, key data emphasis.
-  static const Color primary = Color(0xFF006666);
-  static const Color primaryHover = Color(0xFF005252);
-  static const Color primarySoft = Color(0xFFE0EFEF);
+  static Brightness? _brightnessOverride;
 
-  /// Cool secondary surface — used for elevated layered cards.
-  static const Color secondary = Color(0xFFF1F2F5);
+  static R resolveFor<R>(Brightness brightness, R Function() resolve) {
+    final previous = _brightnessOverride;
+    _brightnessOverride = brightness;
+    try {
+      return resolve();
+    } finally {
+      _brightnessOverride = previous;
+    }
+  }
 
-  /// Semantic colors for severity, status, and feedback.
-  static const Color success = Color(0xFF00A63D);
-  static const Color successSoft = Color(0xFFE3F8EB);
-  static const Color warning = Color(0xFFFE9900);
-  static const Color warningSoft = Color(0xFFFFF1DE);
-  static const Color danger = Color(0xFFFF2157);
-  static const Color dangerSoft = Color(0xFFFFE3EB);
-  static const Color info = Color(0xFF1E64FF);
-  static const Color infoSoft = Color(0xFFE2ECFF);
+  static bool get isDark =>
+      (_brightnessOverride ??
+          WidgetsBinding.instance.platformDispatcher.platformBrightness) ==
+      Brightness.dark;
 
-  /// Surface — the base "putty" the entire app sits on. Neumorphism requires
-  /// every element be the same hue as the surface; only shadows separate them.
-  static const Color surface = Color(0xFFE7E5E4);
-  static const Color surfaceRaised = Color(0xFFEDECEB);
-  static const Color surfaceSunken = Color(0xFFDEDCDB);
+  /// Monochrome action tone. Light mode resolves to matte black; dark mode
+  /// resolves to off-white.
+  static Color get primary =>
+      isDark ? const Color(0xFFF2F1EC) : const Color(0xFF111111);
+  static Color get primaryHover =>
+      isDark ? const Color(0xFFFFFFFF) : const Color(0xFF000000);
+  static Color get primarySoft =>
+      isDark ? const Color(0xFF252525) : const Color(0xFFE3E1DC);
+
+  /// Secondary surface - same monochrome family, never chromatic.
+  static Color get secondary =>
+      isDark ? const Color(0xFF18191A) : const Color(0xFFF3F2EF);
+
+  /// Semantic tones are deliberately grayscale to preserve the strict
+  /// monochrome interface while still allowing hierarchy.
+  static Color get success =>
+      isDark ? const Color(0xFFE5E2DA) : const Color(0xFF303030);
+  static Color get successSoft =>
+      isDark ? const Color(0xFF232323) : const Color(0xFFE8E6E1);
+  static Color get warning =>
+      isDark ? const Color(0xFFC7C3BA) : const Color(0xFF555555);
+  static Color get warningSoft =>
+      isDark ? const Color(0xFF1F2020) : const Color(0xFFE1DFDA);
+  static Color get danger =>
+      isDark ? const Color(0xFFFFFFFF) : const Color(0xFF050505);
+  static Color get dangerSoft =>
+      isDark ? const Color(0xFF2A2A2A) : const Color(0xFFDAD8D2);
+  static Color get info =>
+      isDark ? const Color(0xFFD6D3CB) : const Color(0xFF424242);
+  static Color get infoSoft =>
+      isDark ? const Color(0xFF202122) : const Color(0xFFE5E3DE);
+
+  /// Surface - the base chassis the entire app sits on.
+  static Color get surface =>
+      isDark ? const Color(0xFF101111) : const Color(0xFFF1F0EC);
+  static Color get surfaceRaised =>
+      isDark ? const Color(0xFF18191A) : const Color(0xFFF8F7F4);
+  static Color get surfaceSunken =>
+      isDark ? const Color(0xFF080909) : const Color(0xFFE2E0DB);
 
   /// Text / ink scale.
-  static const Color ink = Color(0xFF1E2938);
-  static const Color inkSoft = Color(0xFF52606D);
-  static const Color inkMuted = Color(0xFF7B8794);
-  static const Color inkDisabled = Color(0xFFB0B7BF);
-  static const Color inkInverse = Color(0xFFFFFFFF);
+  static Color get ink =>
+      isDark ? const Color(0xFFF4F2ED) : const Color(0xFF111111);
+  static Color get inkSoft =>
+      isDark ? const Color(0xFFC7C3BB) : const Color(0xFF424242);
+  static Color get inkMuted =>
+      isDark ? const Color(0xFF8C8982) : const Color(0xFF6B6964);
+  static Color get inkDisabled =>
+      isDark ? const Color(0xFF5F5D58) : const Color(0xFFAAA69E);
+  static Color get inkInverse =>
+      isDark ? const Color(0xFF0A0A0A) : const Color(0xFFFFFFFF);
 
-  /// Shadow tokens — the heart of neumorphism. Two opposing shadows on every
-  /// surface: a soft highlight (top-left) and a soft drop shadow (bottom-right).
-  static const Color shadowDark = Color(0xFFB8B6B5);
-  static const Color shadowLight = Color(0xFFFFFFFF);
+  /// Shadow tokens - firmer than classic pillow neumorphism.
+  static Color get shadowDark =>
+      isDark ? const Color(0xFF000000) : const Color(0xFFB9B6AE);
+  static Color get shadowLight =>
+      isDark ? const Color(0xFF2C2D2E) : const Color(0xFFFFFFFF);
 
   /// Hairline divider for separating list rows when shadows aren't enough.
-  static const Color divider = Color(0x14000000);
+  static Color get divider =>
+      isDark ? const Color(0x24FFFFFF) : const Color(0x18000000);
 
   // ────────────────────────────────────────────────────────────────────────
-  // TYPOGRAPHY — Space Mono for everything per the design skill.
+  // TYPOGRAPHY - Space Mono for everything per the design skill.
   // ────────────────────────────────────────────────────────────────────────
 
   static const String fontDisplay = 'SpaceMono';
@@ -67,83 +107,72 @@ class T {
     fontWeight: FontWeight.w700,
     fontSize: 36,
     height: 1.10,
-    letterSpacing: -0.4,
-    color: ink,
+    letterSpacing: 0,
   );
   static const TextStyle display2 = TextStyle(
     fontFamily: fontDisplay,
     fontWeight: FontWeight.w700,
     fontSize: 28,
     height: 1.15,
-    letterSpacing: -0.3,
-    color: ink,
+    letterSpacing: 0,
   );
   static const TextStyle h1 = TextStyle(
     fontFamily: fontDisplay,
     fontWeight: FontWeight.w700,
     fontSize: 22,
     height: 1.20,
-    letterSpacing: -0.2,
-    color: ink,
+    letterSpacing: 0,
   );
   static const TextStyle h2 = TextStyle(
     fontFamily: fontDisplay,
     fontWeight: FontWeight.w700,
     fontSize: 18,
     height: 1.25,
-    letterSpacing: -0.1,
-    color: ink,
+    letterSpacing: 0,
   );
   static const TextStyle h3 = TextStyle(
     fontFamily: fontDisplay,
     fontWeight: FontWeight.w700,
     fontSize: 16,
     height: 1.30,
-    color: ink,
   );
   static const TextStyle body = TextStyle(
     fontFamily: fontBody,
     fontWeight: FontWeight.w400,
     fontSize: 14,
     height: 1.45,
-    color: ink,
   );
   static const TextStyle bodyStrong = TextStyle(
     fontFamily: fontBody,
     fontWeight: FontWeight.w700,
     fontSize: 14,
     height: 1.45,
-    color: ink,
   );
   static const TextStyle bodySoft = TextStyle(
     fontFamily: fontBody,
     fontWeight: FontWeight.w400,
     fontSize: 14,
     height: 1.45,
-    color: inkSoft,
   );
   static const TextStyle caption = TextStyle(
     fontFamily: fontBody,
     fontWeight: FontWeight.w400,
     fontSize: 12,
     height: 1.40,
-    letterSpacing: 0.1,
-    color: inkMuted,
+    letterSpacing: 0,
   );
   static const TextStyle label = TextStyle(
     fontFamily: fontBody,
     fontWeight: FontWeight.w700,
     fontSize: 12,
     height: 1.30,
-    letterSpacing: 0.6,
-    color: inkSoft,
+    letterSpacing: 0,
   );
   static const TextStyle mono = TextStyle(
     fontFamily: fontMono,
     fontWeight: FontWeight.w500,
     fontSize: 13,
     height: 1.30,
-    color: ink,
   );
 
   /// Big metric numerals (HR, temperature). Always tabular for stable layout.
@@ -152,8 +181,7 @@ class T {
     fontWeight: FontWeight.w700,
     fontSize: 56,
     height: 1.0,
-    letterSpacing: -1.0,
-    color: ink,
+    letterSpacing: 0,
     fontFeatures: [FontFeature.tabularFigures()],
   );
   static const TextStyle metricLarge = TextStyle(
@@ -161,8 +189,7 @@ class T {
     fontWeight: FontWeight.w700,
     fontSize: 32,
     height: 1.0,
-    letterSpacing: -0.5,
-    color: ink,
+    letterSpacing: 0,
     fontFeatures: [FontFeature.tabularFigures()],
   );
   static const TextStyle metricSmall = TextStyle(
@@ -170,12 +197,11 @@ class T {
     fontWeight: FontWeight.w700,
     fontSize: 20,
     height: 1.0,
-    color: ink,
     fontFeatures: [FontFeature.tabularFigures()],
   );
 
   // ────────────────────────────────────────────────────────────────────────
-  // SPACING — compact scale (4px base).
+  // SPACING - compact scale (4px base).
   // ────────────────────────────────────────────────────────────────────────
 
   static const double space1 = 4;
@@ -189,11 +215,11 @@ class T {
   static const double space9 = 48;
   static const double space10 = 64;
 
-  // Page-level horizontal padding. Scales with screen width — set in theme.
+  // Page-level horizontal padding. Scales with screen width - set in theme.
   static const double pagePadding = 20;
 
   // ────────────────────────────────────────────────────────────────────────
-  // RADIUS — generous, rounded but not pill-y. Soft enough for neumorphism.
+  // RADIUS - generous, rounded but not pill-y. Soft enough for neumorphism.
   // ────────────────────────────────────────────────────────────────────────
 
   static const Radius rXs = Radius.circular(6);
@@ -211,15 +237,15 @@ class T {
   static const BorderRadius brPill = BorderRadius.all(rPill);
 
   // ────────────────────────────────────────────────────────────────────────
-  // ELEVATION — neumorphic shadow recipes. Each "level" is a (light, dark)
+  // ELEVATION - neumorphic shadow recipes. Each "level" is a (light, dark)
   // pair of BoxShadows. RAISED = extruded outward. SUNKEN = pressed inward
   // (rendered via a separate inset shadow widget).
   // ────────────────────────────────────────────────────────────────────────
 
   static const double blurXs = 4;
   static const double blurSm = 8;
-  static const double blurMd = 14;
-  static const double blurLg = 22;
+  static const double blurMd = 10;
+  static const double blurLg = 16;
 
   static const Offset offsetXs = Offset(2, 2);
   static const Offset offsetSm = Offset(4, 4);
@@ -228,24 +254,56 @@ class T {
 
   /// Raised shadow stack. Two opposing shadows per the design language.
   static List<BoxShadow> raisedXs() => [
-        BoxShadow(color: shadowDark.withValues(alpha: 0.45), offset: offsetXs, blurRadius: blurXs),
-        BoxShadow(color: shadowLight.withValues(alpha: 0.95), offset: -offsetXs, blurRadius: blurXs),
-      ];
+    BoxShadow(
+      color: shadowDark.withValues(alpha: 0.55),
+      offset: offsetXs,
+      blurRadius: blurXs,
+    ),
+    BoxShadow(
+      color: shadowLight.withValues(alpha: 0.75),
+      offset: -offsetXs,
+      blurRadius: blurXs,
+    ),
+  ];
   static List<BoxShadow> raisedSm() => [
-        BoxShadow(color: shadowDark.withValues(alpha: 0.50), offset: offsetSm, blurRadius: blurSm),
-        BoxShadow(color: shadowLight.withValues(alpha: 0.95), offset: -offsetSm, blurRadius: blurSm),
-      ];
+    BoxShadow(
+      color: shadowDark.withValues(alpha: 0.62),
+      offset: offsetSm,
+      blurRadius: blurSm,
+    ),
+    BoxShadow(
+      color: shadowLight.withValues(alpha: 0.78),
+      offset: -offsetSm,
+      blurRadius: blurSm,
+    ),
+  ];
   static List<BoxShadow> raisedMd() => [
-        BoxShadow(color: shadowDark.withValues(alpha: 0.55), offset: offsetMd, blurRadius: blurMd),
-        BoxShadow(color: shadowLight.withValues(alpha: 1.0), offset: -offsetMd, blurRadius: blurMd),
-      ];
+    BoxShadow(
+      color: shadowDark.withValues(alpha: 0.68),
+      offset: offsetMd,
+      blurRadius: blurMd,
+    ),
+    BoxShadow(
+      color: shadowLight.withValues(alpha: 0.82),
+      offset: -offsetMd,
+      blurRadius: blurMd,
+    ),
+  ];
   static List<BoxShadow> raisedLg() => [
-        BoxShadow(color: shadowDark.withValues(alpha: 0.55), offset: offsetLg, blurRadius: blurLg),
-        BoxShadow(color: shadowLight.withValues(alpha: 1.0), offset: -offsetLg, blurRadius: blurLg),
-      ];
+    BoxShadow(
+      color: shadowDark.withValues(alpha: 0.70),
+      offset: offsetLg,
+      blurRadius: blurLg,
+    ),
+    BoxShadow(
+      color: shadowLight.withValues(alpha: 0.84),
+      offset: -offsetLg,
+      blurRadius: blurLg,
+    ),
+  ];
 
   // ────────────────────────────────────────────────────────────────────────
-  // MOTION — durations + curves. "decorative motion without purpose" is
+  // MOTION - durations + curves. "decorative motion without purpose" is
   // explicitly forbidden by the skill, so keep these short and expressive.
   // ────────────────────────────────────────────────────────────────────────
 
@@ -270,7 +328,7 @@ class T {
   static const double iconXl = 40;
 
   // ────────────────────────────────────────────────────────────────────────
-  // HIT TARGET — minimum 48dp per WCAG 2.2 AA Target Size.
+  // HIT TARGET - minimum 48dp per WCAG 2.2 AA Target Size.
   // ────────────────────────────────────────────────────────────────────────
 
   static const double minTap = 48;

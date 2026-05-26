@@ -66,8 +66,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
 
   Future<void> _tryBiometric() async {
     if (!_biometricSupported) return;
-    final res =
-        await ref.read(authServiceProvider).authenticateBiometric();
+    final res = await ref.read(authServiceProvider).authenticateBiometric();
     if (res == BiometricResult.ok && mounted) {
       _unlock();
     }
@@ -87,7 +86,9 @@ class _LockScreenState extends ConsumerState<LockScreen> {
 
   void _backspace() {
     setState(() {
-      _entered = _entered.isEmpty ? '' : _entered.substring(0, _entered.length - 1);
+      _entered = _entered.isEmpty
+          ? ''
+          : _entered.substring(0, _entered.length - 1);
       _error = null;
     });
   }
@@ -140,55 +141,60 @@ class _LockScreenState extends ConsumerState<LockScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: T.surface,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(T.pagePadding),
-          child: Column(
-            children: [
-              const Spacer(),
-              NeuSurface(
-                depth: NeuDepth.raised,
-                size: NeuSize.lg,
-                borderRadius: BorderRadius.circular(48),
-                padding: const EdgeInsets.all(T.space5),
-                child: const Icon(Icons.lock_rounded,
-                    size: 36, color: T.primary),
-              ),
-              const SizedBox(height: T.space5),
-              Text('Welcome back', style: T.h1),
-              const SizedBox(height: T.space2),
-              Text('Enter your PIN to unlock', style: T.bodySoft),
-              const SizedBox(height: T.space7),
-              NeuPinDots(length: _len, entered: _entered.length, shake: _shake),
-              const SizedBox(height: T.space5),
-              if (_error != null)
-                Text(_error!, style: T.caption.copyWith(color: T.danger)),
-              if (_lockoutSecRemaining != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: T.space2),
-                  child: Text(
-                    'Try again in ${_lockoutSecRemaining}s',
-                    style: T.caption.copyWith(color: T.danger),
-                  ),
+      body: NeuChassisBackground(
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(T.pagePadding),
+            child: Column(
+              children: [
+                const Spacer(),
+                NeuSurface(
+                  depth: NeuDepth.raised,
+                  size: NeuSize.lg,
+                  borderRadius: BorderRadius.circular(48),
+                  padding: const EdgeInsets.all(T.space5),
+                  child: Icon(Icons.lock_rounded, size: 36, color: T.primary),
                 ),
-              const SizedBox(height: T.space5),
-              if (_busy)
-                const SizedBox(
-                  height: 18,
-                  width: 18,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: T.primary,
-                  ),
+                const SizedBox(height: T.space5),
+                Text('Welcome back', style: T.h1),
+                const SizedBox(height: T.space2),
+                Text('Enter your PIN to unlock', style: T.bodySoft),
+                const SizedBox(height: T.space7),
+                NeuPinDots(
+                  length: _len,
+                  entered: _entered.length,
+                  shake: _shake,
                 ),
-              const Spacer(),
-              NeuPinKeypad(
-                onDigit: _onDigit,
-                onBackspace: _backspace,
-                onBiometric: _biometricSupported ? _tryBiometric : null,
-              ),
-              const SizedBox(height: T.space3),
-            ],
+                const SizedBox(height: T.space5),
+                if (_error != null)
+                  Text(_error!, style: T.caption.copyWith(color: T.danger)),
+                if (_lockoutSecRemaining != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: T.space2),
+                    child: Text(
+                      'Try again in ${_lockoutSecRemaining}s',
+                      style: T.caption.copyWith(color: T.danger),
+                    ),
+                  ),
+                const SizedBox(height: T.space5),
+                if (_busy)
+                  SizedBox(
+                    height: 18,
+                    width: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: T.primary,
+                    ),
+                  ),
+                const Spacer(),
+                NeuPinKeypad(
+                  onDigit: _onDigit,
+                  onBackspace: _backspace,
+                  onBiometric: _biometricSupported ? _tryBiometric : null,
+                ),
+                const SizedBox(height: T.space3),
+              ],
+            ),
           ),
         ),
       ),

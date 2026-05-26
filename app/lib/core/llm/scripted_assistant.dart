@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 
-/// Deterministic fallback used when the on-device Gemma model is not installed.
+/// Deterministic fallback used when the offline edge model is not installed.
 ///
 /// This is not a diagnosis engine. It is a compact rule-based explainer that
 /// grounds answers in the user's recent local wearable data.
@@ -8,6 +8,7 @@ class ScriptedAssistant {
   static String reply(String userMessage, {HealthChatContext? context}) {
     final m = userMessage.toLowerCase();
     final ctx = context ?? const HealthChatContext.empty();
+    final hello = ctx.greetingPrefix;
 
     if (_any(m, [
       'chest pain',
@@ -17,7 +18,7 @@ class ScriptedAssistant {
       'cant breathe',
       'shortness of breath',
     ])) {
-      return 'Those symptoms can be urgent. Pulse Edge cannot diagnose you, but you should seek medical help now, especially if symptoms are severe, new, or worsening.\n\n${ctx.shortSummary}';
+      return '${_lead(hello, 'those symptoms can be urgent.')} Pulse Edge cannot diagnose you, but you should get medical help now if symptoms are severe, new, or worsening.\n\n${ctx.shortSummary}';
     }
 
     if (_any(m, [
@@ -28,19 +29,19 @@ class ScriptedAssistant {
       'today',
       'summary',
     ])) {
-      return '${ctx.statusLine}\n\n${ctx.compactBullets}\n\n${_nextStep(ctx)}';
+      return '${_lead(hello, ctx.statusLine)}\n\n${ctx.compactBullets}\n\n${_nextStep(ctx)}';
     }
 
     if (_any(m, ['heart', 'hr', 'bpm', 'pulse', 'tachy', 'brady'])) {
-      return '${ctx.hrLine}\n\n${_heartGuidance(ctx)}';
+      return '${_lead(hello, ctx.hrLine)}\n\n${_heartGuidance(ctx)}';
     }
 
     if (_any(m, ['oxygen', 'spo2', 'sp02', 'breath', 'hypoxia'])) {
-      return '${ctx.spo2Line}\n\n${_oxygenGuidance(ctx)}';
+      return '${_lead(hello, ctx.spo2Line)}\n\n${_oxygenGuidance(ctx)}';
     }
 
     if (_any(m, ['temperature', 'temp', 'fever', 'hot', 'cold'])) {
-      return '${ctx.tempLine}\n\nSkin temperature is best used as a trend, because a wrist sensor usually reads lower than core body temperature.';
+      return '${_lead(hello, ctx.tempLine)}\n\nSkin temperature is best used as a trend, because a wrist sensor usually reads lower than core body temperature.';
     }
 
     if (_any(m, [
@@ -53,15 +54,15 @@ class ScriptedAssistant {
       'accelerometer',
       'gyro',
     ])) {
-      return '${ctx.motionLine}\n\nMotion helps Pulse Edge decide whether a high heart rate looks activity-related or unusual for rest.';
+      return '${_lead(hello, ctx.motionLine)}\n\nMotion helps Pulse Edge decide whether a high heart rate looks activity-related or unusual for rest.';
     }
 
     if (_any(m, ['alert', 'anomaly', 'warning', 'notification'])) {
-      return '${ctx.alertLine}\n\nAlerts are based on sustained windows, not single noisy samples. Open the Alerts tab for the exact metrics and explanation.';
+      return '${_lead(hello, ctx.alertLine)}\n\nAlerts are based on sustained windows, not single noisy samples. Open the Alerts tab for the exact metrics and explanation.';
     }
 
-    if (_any(m, ['model', 'gemma', 'download', 'ai assistant', 'offline'])) {
-      return 'You are using the rule-based assistant right now. It can explain recent wearable patterns using local rules, but installing the Gemma model unlocks more flexible conversation while still keeping data on your phone.';
+    if (_any(m, ['model', 'download', 'ai assistant', 'offline'])) {
+      return 'You are using the rule-based assistant right now. It analyzes your current wearable data with local rules. Download the offline edge model for fuller conversation while keeping responses on this phone.';
     }
 
     if (_any(m, ['privacy', 'cloud', 'internet', 'server'])) {
@@ -69,13 +70,15 @@ class ScriptedAssistant {
     }
 
     if (_any(m, ['what should i do', 'advice', 'help me', 'recommend'])) {
-      return '${_nextStep(ctx)}\n\n${ctx.compactBullets}';
+      return '${_lead(hello, _nextStep(ctx))}\n\n${ctx.compactBullets}';
     }
 
-    return 'I can help with heart rate, SpO2, skin temperature, motion, alerts, privacy, and today\'s health status.\n\n${ctx.shortSummary}';
+    return '${_lead(hello, 'I can help with heart rate, SpO2, skin temperature, motion, alerts, privacy, and today\'s health status.')}\n\n${ctx.shortSummary}';
   }
 
   static bool _any(String text, List<String> terms) => terms.any(text.contains);
+  static String _lead(String prefix, String text) =>
+      prefix.isEmpty ? text : '$prefix $text';
 
   static String _nextStep(HealthChatContext c) {
     if (c.recentHighAlerts > 0 || c.spo2Min != null && c.spo2Min! <= 90) {
@@ -138,6 +141,17 @@ class ScriptedAssistant {
 
 class HealthChatContext {
   const HealthChatContext({
+    this.profileName,
+    this.username,
+    this.liveHr,
+    this.liveSpo2,
+    this.liveTemp,
+    this.liveActivity = 0,
+    this.liveMotion,
+    this.deviceState,
+    this.deviceName,
+    this.contactOk,
+    this.sensorOk,
     required this.sampleCount,
     this.hrMin,
     this.hrMedian,
@@ -153,7 +167,18 @@ class HealthChatContext {
   });
 
   const HealthChatContext.empty()
-    : sampleCount = 0,
+    : profileName = null,
+      username = null,
+      liveHr = null,
+      liveSpo2 = null,
+      liveTemp = null,
+      liveActivity = 0,
+      liveMotion = null,
+      deviceState = null,
+      deviceName = null,
+      contactOk = null,
+      sensorOk = null,
+      sampleCount = 0,
       hrMin = null,
       hrMedian = null,
       hrMax = null,
@@ -166,6 +191,17 @@ class HealthChatContext {
       recentHighAlerts = 0,
       recentMediumAlerts = 0;
 
+  final String? profileName;
+  final String? username;
+  final double? liveHr;
+  final double? liveSpo2;
+  final double? liveTemp;
+  final int liveActivity;
+  final double? liveMotion;
+  final String? deviceState;
+  final String? deviceName;
+  final bool? contactOk;
+  final bool? sensorOk;
   final int sampleCount;
   final double? hrMin;
   final double? hrMedian;
@@ -179,7 +215,24 @@ class HealthChatContext {
   final int recentHighAlerts;
   final int recentMediumAlerts;
 
+  String get greetingPrefix {
+    final name = profileName?.trim();
+    if (name == null || name.isEmpty || name == 'Friend') return '';
+    return '$name,';
+  }
+
   String get statusLine {
+    if (sensorOk == false) {
+      return 'your wearable is reporting a sensor issue, so readings may be less reliable.';
+    }
+    if (contactOk == false) {
+      return 'your wearable contact looks weak right now, so adjust the fit before trusting the trend.';
+    }
+    if (liveHr != null || liveSpo2 != null || liveTemp != null) {
+      final liveConcern = _liveConcern;
+      if (liveConcern != null) return liveConcern;
+      return 'your live readings look steady right now.';
+    }
     if (sampleCount == 0) {
       return 'I do not have enough wearable data yet.';
     }
@@ -196,27 +249,27 @@ class HealthChatContext {
   }
 
   String get shortSummary => sampleCount == 0
-      ? 'No recent wearable samples are available yet.'
-      : 'Recent data: HR ${_range(hrMin, hrMax, 'bpm')}; SpO2 ${_value(spo2Mean, '%')}; skin temp ${_value(tempMean, 'C')}; motion ${_value(motionMean, 'g')}.';
+      ? 'Current data: $liveSnapshot. No stored wearable samples are available yet.'
+      : 'Current data: $liveSnapshot. Recent data: HR ${_range(hrMin, hrMax, 'bpm')}; SpO2 ${_value(spo2Mean, '%')}; skin temp ${_value(tempMean, 'C')}; motion ${_value(motionMean, 'g')}.';
 
   String get compactBullets =>
       [hrLine, spo2Line, tempLine, motionLine, alertLine].join('\n');
 
   String get hrLine => hrMedian == null
-      ? '- Heart rate: waiting for samples.'
-      : '- Heart rate: ${hrMin!.toStringAsFixed(0)}-${hrMax!.toStringAsFixed(0)} bpm, median ${hrMedian!.toStringAsFixed(0)}.';
+      ? '- Heart rate: ${liveHr == null ? 'waiting for samples' : '${liveHr!.toStringAsFixed(0)} bpm live'}.'
+      : '- Heart rate: ${liveHr == null ? '' : '${liveHr!.toStringAsFixed(0)} bpm live; '}${hrMin!.toStringAsFixed(0)}-${hrMax!.toStringAsFixed(0)} bpm recent range, median ${hrMedian!.toStringAsFixed(0)}.';
 
   String get spo2Line => spo2Mean == null
-      ? '- SpO2: not available yet.'
-      : '- SpO2: average ${spo2Mean!.toStringAsFixed(0)}%, lowest ${spo2Min!.toStringAsFixed(0)}%.';
+      ? '- SpO2: ${liveSpo2 == null ? 'not available yet' : '${liveSpo2!.toStringAsFixed(0)}% live'}.'
+      : '- SpO2: ${liveSpo2 == null ? '' : '${liveSpo2!.toStringAsFixed(0)}% live; '}average ${spo2Mean!.toStringAsFixed(0)}%, lowest ${spo2Min!.toStringAsFixed(0)}%.';
 
   String get tempLine => tempMean == null
-      ? '- Skin temperature: not available yet.'
-      : '- Skin temperature: average ${tempMean!.toStringAsFixed(1)}C, range ${tempMin!.toStringAsFixed(1)}-${tempMax!.toStringAsFixed(1)}C.';
+      ? '- Skin temperature: ${liveTemp == null ? 'not available yet' : '${liveTemp!.toStringAsFixed(1)}C live'}.'
+      : '- Skin temperature: ${liveTemp == null ? '' : '${liveTemp!.toStringAsFixed(1)}C live; '}average ${tempMean!.toStringAsFixed(1)}C, range ${tempMin!.toStringAsFixed(1)}-${tempMax!.toStringAsFixed(1)}C.';
 
   String get motionLine => motionMean == null
-      ? '- Motion: not available yet.'
-      : '- Motion: average intensity ${motionMean!.toStringAsFixed(2)}g.';
+      ? '- Motion: ${liveMotion == null ? ActivityClassName.name(liveActivity) : '${liveMotion!.toStringAsFixed(2)}g live'}.'
+      : '- Motion: ${liveMotion == null ? '' : '${liveMotion!.toStringAsFixed(2)}g live; '}average intensity ${motionMean!.toStringAsFixed(2)}g.';
 
   String get alertLine => recentHighAlerts == 0 && recentMediumAlerts == 0
       ? '- Alerts: no recent alerts.'
@@ -232,4 +285,52 @@ class HealthChatContext {
     final digits = unit == 'C' || unit == 'g' ? 1 : 0;
     return '${v.toStringAsFixed(digits)}$unit';
   }
+
+  String get liveSnapshot {
+    final parts = <String>[
+      if (deviceName != null) 'device $deviceName',
+      if (deviceState != null) 'state $deviceState',
+      'HR ${liveHr == null ? 'waiting' : '${liveHr!.toStringAsFixed(0)} bpm'}',
+      'SpO2 ${liveSpo2 == null ? 'waiting' : '${liveSpo2!.toStringAsFixed(0)}%'}',
+      'skin temp ${liveTemp == null ? 'waiting' : '${liveTemp!.toStringAsFixed(1)}C'}',
+      'activity ${ActivityClassName.name(liveActivity)}',
+      if (contactOk == false) 'contact weak',
+      if (sensorOk == false) 'sensor issue',
+    ];
+    return parts.join(', ');
+  }
+
+  String? get _liveConcern {
+    if (liveSpo2 != null && liveSpo2! <= 90) {
+      return 'your live oxygen reading is below the app safety threshold.';
+    }
+    if (liveHr != null && liveHr! >= 180) {
+      return 'your live heart rate is very high right now.';
+    }
+    if (liveHr != null && liveHr! <= 35) {
+      return 'your live heart rate is very low right now.';
+    }
+    if (liveTemp != null && liveTemp! >= 39.5) {
+      return 'your live skin temperature is high right now.';
+    }
+    if (liveTemp != null && liveTemp! <= 34) {
+      return 'your live skin temperature is low right now.';
+    }
+    return null;
+  }
+
+  String toPromptContext() {
+    return [
+      'User name: ${profileName ?? 'not set'}',
+      'Username: ${username == null ? 'not set' : '@$username'}',
+      'Live snapshot: $liveSnapshot',
+      'Recent summary: $shortSummary',
+      'Alerts: $alertLine',
+    ].join('\n');
+  }
+}
+
+class ActivityClassName {
+  static String name(int a) =>
+      const ['resting', 'walking', 'running', 'other'][a.clamp(0, 3)];
 }

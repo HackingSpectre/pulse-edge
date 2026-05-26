@@ -105,7 +105,10 @@ class _AlertRow extends StatelessWidget {
                 Row(
                   children: [
                     Expanded(child: Text(type.label, style: T.bodyStrong)),
-                    NeuSeverityBadge(label: sev.label.toUpperCase(), color: sev.color),
+                    NeuSeverityBadge(
+                      label: sev.label.toUpperCase(),
+                      color: sev.color,
+                    ),
                   ],
                 ),
                 const SizedBox(height: 2),
@@ -125,7 +128,7 @@ class _AlertRow extends StatelessWidget {
               margin: const EdgeInsets.only(left: T.space2),
               width: 8,
               height: 8,
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: T.primary,
                 shape: BoxShape.circle,
               ),
@@ -136,12 +139,12 @@ class _AlertRow extends StatelessWidget {
   }
 
   IconData _iconFor(AlertType t) => switch (t) {
-        AlertType.tachycardia => Icons.favorite_rounded,
-        AlertType.bradycardia => Icons.heart_broken_rounded,
-        AlertType.hypoxia => Icons.air_rounded,
-        AlertType.hyperthermia => Icons.local_fire_department_rounded,
-        AlertType.hypothermia => Icons.ac_unit_rounded,
-        AlertType.fall => Icons.warning_rounded,
-        AlertType.modelAnomaly => Icons.insights_rounded,
-      };
+    AlertType.tachycardia => Icons.favorite_rounded,
+    AlertType.bradycardia => Icons.heart_broken_rounded,
+    AlertType.hypoxia => Icons.air_rounded,
+    AlertType.hyperthermia => Icons.local_fire_department_rounded,
+    AlertType.hypothermia => Icons.ac_unit_rounded,
+    AlertType.fall => Icons.warning_rounded,
+    AlertType.modelAnomaly => Icons.insights_rounded,
+  };
 }

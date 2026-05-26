@@ -104,10 +104,7 @@ class _StepSetPinState extends ConsumerState<StepSetPin> {
         NeuPinDots(length: _pinLen, entered: entered, shake: _shake),
         if (_error != null) ...[
           const SizedBox(height: T.space4),
-          Text(
-            _error!,
-            style: T.caption.copyWith(color: T.danger),
-          ),
+          Text(_error!, style: T.caption.copyWith(color: T.danger)),
         ],
         const SizedBox(height: T.space6),
         NeuPinKeypad(onDigit: _onDigit, onBackspace: _backspace),

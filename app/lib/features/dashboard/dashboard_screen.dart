@@ -105,21 +105,12 @@ class _ConnectionStrip extends ConsumerWidget {
               Container(
                 width: 10,
                 height: 10,
-                decoration: BoxDecoration(
-                  color: color,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: color.withValues(alpha: 0.5),
-                      blurRadius: 6,
-                    ),
-                  ],
-                ),
+                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
               ),
               const SizedBox(width: T.space3),
               Expanded(child: Text(label, style: T.bodyStrong)),
               if (s.batteryPct != null) ...[
-                const Icon(
+                Icon(
                   Icons.battery_full_rounded,
                   size: T.iconSm,
                   color: T.inkSoft,
@@ -206,6 +197,7 @@ class _WearableMetrics extends ConsumerWidget {
               value: v.temp == null ? '--' : v.temp!.toStringAsFixed(1),
               unit: '°C',
               caption: _tempLabel(v.temp),
+              slantRight: true,
             ),
             _MetricTile(
               icon: Icons.speed_rounded,
@@ -223,6 +215,7 @@ class _WearableMetrics extends ConsumerWidget {
               unit: 'dps',
               compact: true,
               caption: 'x, y, z',
+              slantRight: true,
             ),
             _MetricTile(
               icon: Icons.open_with_rounded,
@@ -241,6 +234,7 @@ class _WearableMetrics extends ConsumerWidget {
               unit: '',
               compact: true,
               caption: _activityHint(v.activity),
+              slantRight: true,
             ),
           ],
         );
@@ -279,6 +273,7 @@ class _MetricTile extends StatelessWidget {
     required this.unit,
     this.caption,
     this.compact = false,
+    this.slantRight = false,
   });
 
   final IconData icon;
@@ -288,10 +283,12 @@ class _MetricTile extends StatelessWidget {
   final String unit;
   final String? caption;
   final bool compact;
+  final bool slantRight;
 
   @override
   Widget build(BuildContext context) {
     return NeuCard(
+      slantRight: slantRight,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -518,7 +515,7 @@ class _DailySummaryCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.psychology_rounded, color: T.primary),
+          Icon(Icons.psychology_rounded, color: T.primary),
           const SizedBox(width: T.space3),
           Expanded(
             child: Column(
@@ -536,7 +533,7 @@ class _DailySummaryCard extends StatelessWidget {
               ],
             ),
           ),
-          const Icon(Icons.arrow_forward_rounded, color: T.primary),
+          Icon(Icons.arrow_forward_rounded, color: T.primary),
         ],
       ),
     );

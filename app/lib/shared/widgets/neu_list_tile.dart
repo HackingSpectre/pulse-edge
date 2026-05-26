@@ -51,7 +51,12 @@ class NeuListTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(title, style: T.bodyStrong, maxLines: 1, overflow: TextOverflow.ellipsis),
+                Text(
+                  title,
+                  style: T.bodyStrong,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
                 if (subtitle != null) ...[
                   const SizedBox(height: 2),
                   Text(
@@ -69,7 +74,7 @@ class NeuListTile extends StatelessWidget {
             trailing!,
           ] else if (onTap != null) ...[
             const SizedBox(width: T.space3),
-            const Icon(
+            Icon(
               Icons.chevron_right_rounded,
               color: T.inkMuted,
               size: T.iconSm,
@@ -104,11 +109,7 @@ class NeuTileDivider extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.only(left: indent, right: T.space4),
-      child: const Divider(
-        height: 1,
-        thickness: 1,
-        color: T.divider,
-      ),
+      child: Divider(height: 1, thickness: 1, color: T.divider),
     );
   }
 }
@@ -131,7 +132,10 @@ class NeuListGroup extends StatelessWidget {
       depth: NeuDepth.raised,
       borderRadius: T.brLg,
       padding: const EdgeInsets.symmetric(vertical: T.space2),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: divided),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: divided,
+      ),
     );
   }
 }

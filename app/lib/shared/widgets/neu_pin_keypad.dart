@@ -50,9 +50,7 @@ class NeuPinKeypad extends StatelessWidget {
                     SizedBox(
                       width: keySize,
                       height: keySize,
-                      child: k.empty
-                          ? const SizedBox.shrink()
-                          : _Key(def: k),
+                      child: k.empty ? const SizedBox.shrink() : _Key(def: k),
                     ),
                     if (k != row.last) SizedBox(width: spacing),
                   ],
@@ -66,15 +64,20 @@ class NeuPinKeypad extends StatelessWidget {
     );
   }
 
-  _KeyDef _digit(int n) =>
-      _KeyDef(label: '$n', onTap: () => onDigit(n));
+  _KeyDef _digit(int n) => _KeyDef(label: '$n', onTap: () => onDigit(n));
   _KeyDef _icon(IconData icon, VoidCallback onTap, {required String label}) =>
       _KeyDef(icon: icon, onTap: onTap, semantic: label);
   _KeyDef _empty() => const _KeyDef(empty: true);
 }
 
 class _KeyDef {
-  const _KeyDef({this.label, this.icon, this.onTap, this.semantic, this.empty = false});
+  const _KeyDef({
+    this.label,
+    this.icon,
+    this.onTap,
+    this.semantic,
+    this.empty = false,
+  });
   final String? label;
   final IconData? icon;
   final VoidCallback? onTap;
@@ -165,11 +168,10 @@ class NeuPinDots extends StatelessWidget {
       duration: const Duration(milliseconds: 380),
       builder: (context, t, child) {
         // Damped sine wave for shake.
-        final dx = shake ? (16.0 * (1 - t) * (t * 24).remainder(2.0) - 8.0) : 0.0;
-        return Transform.translate(
-          offset: Offset(dx, 0),
-          child: child,
-        );
+        final dx = shake
+            ? (16.0 * (1 - t) * (t * 24).remainder(2.0) - 8.0)
+            : 0.0;
+        return Transform.translate(offset: Offset(dx, 0), child: child);
       },
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -184,9 +186,6 @@ class NeuPinDots extends StatelessWidget {
               decoration: BoxDecoration(
                 color: filled ? T.primary : T.surfaceSunken,
                 shape: BoxShape.circle,
-                boxShadow: filled
-                    ? [BoxShadow(color: T.primary.withValues(alpha: 0.40), blurRadius: 8)]
-                    : null,
               ),
             ),
           );

@@ -52,7 +52,7 @@ class ImuSamples extends Table {
   IntColumn get activity => integer().withDefault(const Constant(0))();
 }
 
-/// Per-window feature vector — the input to the anomaly detection model.
+/// Per-window feature vector - the input to the anomaly detection model.
 /// Persisted so we can re-score windows after the model is updated.
 class FeatureRows extends Table {
   IntColumn get id => integer().autoIncrement()();
@@ -131,6 +131,7 @@ class ChatMessages extends Table {
 class Profiles extends Table {
   IntColumn get id => integer().withDefault(const Constant(1))();
   TextColumn get name => text()();
+  TextColumn get username => text().nullable()();
   IntColumn get sex => integer()(); // 0 unspecified, 1 male, 2 female, 3 other
   IntColumn get birthYear => integer()();
   RealColumn get heightCm => real().nullable()();

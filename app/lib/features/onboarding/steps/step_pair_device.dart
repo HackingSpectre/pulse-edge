@@ -109,7 +109,7 @@ class _StepPairDeviceState extends ConsumerState<StepPairDevice> {
                   color: T.successSoft,
                   child: Row(
                     children: [
-                      const Icon(Icons.check_circle_rounded, color: T.success),
+                      Icon(Icons.check_circle_rounded, color: T.success),
                       const SizedBox(width: T.space3),
                       Expanded(
                         child: Text(
@@ -135,7 +135,7 @@ class _StepPairDeviceState extends ConsumerState<StepPairDevice> {
                       Text(
                         _scanning
                             ? 'Looking for PulseEdge nearby…'
-                            : 'Nothing found yet — keep the wearable powered on and tap Scan.',
+                            : 'Nothing found yet - keep the wearable powered on and tap Scan.',
                         style: T.caption,
                         textAlign: TextAlign.center,
                       ),
@@ -156,7 +156,7 @@ class _StepPairDeviceState extends ConsumerState<StepPairDevice> {
                       onTap: () => _connect(r),
                       child: Row(
                         children: [
-                          const Icon(Icons.bluetooth_rounded, color: T.primary),
+                          Icon(Icons.bluetooth_rounded, color: T.primary),
                           const SizedBox(width: T.space4),
                           Expanded(
                             child: Column(

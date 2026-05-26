@@ -65,7 +65,8 @@ class _AlertDetailScreenState extends ConsumerState<AlertDetailScreen> {
           final sev = AlertSeverity.fromCode(row.severity);
           final type = AlertType.fromId(row.type);
           final ts = DateTime.fromMillisecondsSinceEpoch(row.tsMs);
-          final metrics = (jsonDecode(row.metricsJson) as Map).cast<String, Object?>();
+          final metrics = (jsonDecode(row.metricsJson) as Map)
+              .cast<String, Object?>();
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -76,7 +77,10 @@ class _AlertDetailScreenState extends ConsumerState<AlertDetailScreen> {
                   children: [
                     Row(
                       children: [
-                        NeuSeverityBadge(label: sev.label.toUpperCase(), color: sev.color),
+                        NeuSeverityBadge(
+                          label: sev.label.toUpperCase(),
+                          color: sev.color,
+                        ),
                         const SizedBox(width: T.space2),
                         Text(
                           DateFormat.yMMMd().add_jm().format(ts),
@@ -106,7 +110,9 @@ class _AlertDetailScreenState extends ConsumerState<AlertDetailScreen> {
                             Text(entry.key, style: T.caption),
                             const Spacer(),
                             Text(
-                              entry.value == null ? '—' : entry.value.toString(),
+                              entry.value == null
+                                  ? '-'
+                                  : entry.value.toString(),
                               style: T.body.copyWith(
                                 fontFamily: T.fontMono,
                                 fontSize: 13,
@@ -125,7 +131,7 @@ class _AlertDetailScreenState extends ConsumerState<AlertDetailScreen> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.tips_and_updates_rounded, color: T.primary),
+                      Icon(Icons.tips_and_updates_rounded, color: T.primary),
                       const SizedBox(width: T.space3),
                       Expanded(
                         child: Text(
@@ -143,9 +149,12 @@ class _AlertDetailScreenState extends ConsumerState<AlertDetailScreen> {
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.psychology_rounded, color: T.info),
+                        Icon(Icons.psychology_rounded, color: T.info),
                         const SizedBox(width: T.space2),
-                        Text('Assistant explanation'.toUpperCase(), style: T.label),
+                        Text(
+                          'Assistant explanation'.toUpperCase(),
+                          style: T.label,
+                        ),
                       ],
                     ),
                     const SizedBox(height: T.space3),
@@ -153,7 +162,9 @@ class _AlertDetailScreenState extends ConsumerState<AlertDetailScreen> {
                       Text(_llmExplanation!, style: T.body)
                     else
                       NeuButton(
-                        label: _loadingLlm ? 'Generating…' : 'Ask the assistant',
+                        label: _loadingLlm
+                            ? 'Generating…'
+                            : 'Ask the assistant',
                         loading: _loadingLlm,
                         icon: Icons.auto_awesome_rounded,
                         onPressed: () => _askLlm(row),
@@ -172,7 +183,10 @@ class _AlertDetailScreenState extends ConsumerState<AlertDetailScreen> {
                       onPressed: row.markedNotAnomalous
                           ? null
                           : () async {
-                              await repo.dismiss(row.id, markNotAnomalous: true);
+                              await repo.dismiss(
+                                row.id,
+                                markNotAnomalous: true,
+                              );
                               if (!context.mounted) return;
                               context.go(Routes.alerts);
                             },

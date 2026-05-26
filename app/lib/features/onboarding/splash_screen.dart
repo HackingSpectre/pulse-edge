@@ -41,12 +41,18 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     if (!mounted) return;
     final settings = ref.read(settingsProvider);
     final auth = ref.read(authServiceProvider);
+    final hasPin = await auth.hasPin();
+    if (!mounted) return;
     if (!settings.onboardingComplete) {
+      if (hasPin) {
+        await settings.setOnboardingComplete(true);
+        ref.invalidate(routerProvider);
+        if (mounted) context.go(Routes.lock);
+        return;
+      }
       if (mounted) context.go(Routes.onboarding);
       return;
     }
-    final hasPin = await auth.hasPin();
-    if (!mounted) return;
     if (!hasPin) {
       context.go(Routes.onboarding);
     } else {
@@ -64,21 +70,22 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: T.surface,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ScaleTransition(
-              scale: _scale,
-              child: const _Logo(),
-            ),
-            const SizedBox(height: T.space7),
-            FadeTransition(
-              opacity: _fade,
-              child: Text('PULSE EDGE',
-                  style: T.label.copyWith(letterSpacing: 4, color: T.inkSoft)),
-            ),
-          ],
+      body: NeuChassisBackground(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ScaleTransition(scale: _scale, child: const _Logo()),
+              const SizedBox(height: T.space7),
+              FadeTransition(
+                opacity: _fade,
+                child: Text(
+                  'PULSE EDGE',
+                  style: T.label.copyWith(color: T.inkSoft),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -109,10 +116,9 @@ class _LogoState extends State<_Logo> with SingleTickerProviderStateMixin {
     return AnimatedBuilder(
       animation: _pulse,
       builder: (context, _) {
-        final t = (_pulse.value < 0.5
-                ? _pulse.value * 2
-                : (1 - _pulse.value) * 2)
-            .clamp(0.0, 1.0);
+        final t =
+            (_pulse.value < 0.5 ? _pulse.value * 2 : (1 - _pulse.value) * 2)
+                .clamp(0.0, 1.0);
         return SizedBox(
           width: 160,
           height: 160,

@@ -1,4 +1,4 @@
-/// One feature vector — the input the anomaly detector sees, and the row
+/// One feature vector - the input the anomaly detector sees, and the row
 /// that gets stored in `feature_rows`.
 class FeatureWindow {
   const FeatureWindow({
@@ -36,34 +36,34 @@ class FeatureWindow {
   /// Ordered numeric features for the model. Keep this in lock-step with
   /// the Python feature spec (ml/anomaly/feature_spec.json).
   List<double> toModelInput() => [
-        hrMean,
-        hrStd,
-        hrMin,
-        hrMax,
-        rmssd,
-        pnn50,
-        spo2Mean ?? hrMean, // fall back so missing SpO₂ doesn't NaN-poison
-        tempMean,
-        tempSlope,
-        accelMean,
-        accelStd,
-        activity.toDouble(),
-      ];
+    hrMean,
+    hrStd,
+    hrMin,
+    hrMax,
+    rmssd,
+    pnn50,
+    spo2Mean ?? hrMean, // fall back so missing SpO₂ doesn't NaN-poison
+    tempMean,
+    tempSlope,
+    accelMean,
+    accelStd,
+    activity.toDouble(),
+  ];
 
   Map<String, Object?> toJson() => {
-        'tsMs': tsMs,
-        'windowS': windowS,
-        'hrMean': hrMean,
-        'hrStd': hrStd,
-        'hrMin': hrMin,
-        'hrMax': hrMax,
-        'rmssd': rmssd,
-        'pnn50': pnn50,
-        'spo2Mean': spo2Mean,
-        'tempMean': tempMean,
-        'tempSlope': tempSlope,
-        'accelMean': accelMean,
-        'accelStd': accelStd,
-        'activity': activity,
-      };
+    'tsMs': tsMs,
+    'windowS': windowS,
+    'hrMean': hrMean,
+    'hrStd': hrStd,
+    'hrMin': hrMin,
+    'hrMax': hrMax,
+    'rmssd': rmssd,
+    'pnn50': pnn50,
+    'spo2Mean': spo2Mean,
+    'tempMean': tempMean,
+    'tempSlope': tempSlope,
+    'accelMean': accelMean,
+    'accelStd': accelStd,
+    'activity': activity,
+  };
 }

@@ -3,17 +3,24 @@ import 'package:flutter/material.dart';
 import '../theme/tokens.dart';
 
 enum AlertSeverity {
-  low(0, 'Low', T.info),
-  medium(1, 'Medium', T.warning),
-  high(2, 'High', T.danger);
+  low(0, 'Low'),
+  medium(1, 'Medium'),
+  high(2, 'High');
 
-  const AlertSeverity(this.code, this.label, this.color);
+  const AlertSeverity(this.code, this.label);
   final int code;
   final String label;
-  final Color color;
 
-  static AlertSeverity fromCode(int code) =>
-      AlertSeverity.values.firstWhere((s) => s.code == code, orElse: () => AlertSeverity.low);
+  Color get color => switch (this) {
+    AlertSeverity.low => T.info,
+    AlertSeverity.medium => T.warning,
+    AlertSeverity.high => T.danger,
+  };
+
+  static AlertSeverity fromCode(int code) => AlertSeverity.values.firstWhere(
+    (s) => s.code == code,
+    orElse: () => AlertSeverity.low,
+  );
 }
 
 /// Stable identifier for the kind of physiological signal that fired.
@@ -30,6 +37,8 @@ enum AlertType {
   final String id;
   final String label;
 
-  static AlertType fromId(String id) =>
-      AlertType.values.firstWhere((t) => t.id == id, orElse: () => AlertType.modelAnomaly);
+  static AlertType fromId(String id) => AlertType.values.firstWhere(
+    (t) => t.id == id,
+    orElse: () => AlertType.modelAnomaly,
+  );
 }

@@ -4,7 +4,7 @@ import 'database.dart';
 import '../ml/feature_window.dart';
 
 /// Thin domain wrappers around the drift DAOs. The rest of the app should
-/// use these — never reach into [AppDb] directly from feature code.
+/// use these - never reach into [AppDb] directly from feature code.
 class SensorRepo {
   SensorRepo(this._db);
   final AppDb _db;
@@ -212,6 +212,16 @@ class AnomalyRepo {
           ..where((t) => t.tsMs.isBiggerOrEqualValue(fromMs))
           ..orderBy([(t) => OrderingTerm.desc(t.tsMs)]))
         .get();
+  }
+
+  Future<AnomalyRow?> latestByTypeSince(String type, int fromMs) {
+    return (_db.select(_db.anomalies)
+          ..where(
+            (t) => t.type.equals(type) & t.tsMs.isBiggerOrEqualValue(fromMs),
+          )
+          ..orderBy([(t) => OrderingTerm.desc(t.tsMs)])
+          ..limit(1))
+        .getSingleOrNull();
   }
 
   Future<void> dismiss(String id, {bool markNotAnomalous = false}) async {

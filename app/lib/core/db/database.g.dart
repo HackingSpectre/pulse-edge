@@ -4135,6 +4135,17 @@ class $ProfilesTable extends Profiles with TableInfo<$ProfilesTable, Profile> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _usernameMeta = const VerificationMeta(
+    'username',
+  );
+  @override
+  late final GeneratedColumn<String> username = GeneratedColumn<String>(
+    'username',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _sexMeta = const VerificationMeta('sex');
   @override
   late final GeneratedColumn<int> sex = GeneratedColumn<int>(
@@ -4204,6 +4215,7 @@ class $ProfilesTable extends Profiles with TableInfo<$ProfilesTable, Profile> {
   List<GeneratedColumn> get $columns => [
     id,
     name,
+    username,
     sex,
     birthYear,
     heightCm,
@@ -4233,6 +4245,12 @@ class $ProfilesTable extends Profiles with TableInfo<$ProfilesTable, Profile> {
       );
     } else if (isInserting) {
       context.missing(_nameMeta);
+    }
+    if (data.containsKey('username')) {
+      context.handle(
+        _usernameMeta,
+        username.isAcceptableOrUnknown(data['username']!, _usernameMeta),
+      );
     }
     if (data.containsKey('sex')) {
       context.handle(
@@ -4299,6 +4317,10 @@ class $ProfilesTable extends Profiles with TableInfo<$ProfilesTable, Profile> {
         DriftSqlType.string,
         data['${effectivePrefix}name'],
       )!,
+      username: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}username'],
+      ),
       sex: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}sex'],
@@ -4335,6 +4357,7 @@ class $ProfilesTable extends Profiles with TableInfo<$ProfilesTable, Profile> {
 class Profile extends DataClass implements Insertable<Profile> {
   final int id;
   final String name;
+  final String? username;
   final int sex;
   final int birthYear;
   final double? heightCm;
@@ -4344,6 +4367,7 @@ class Profile extends DataClass implements Insertable<Profile> {
   const Profile({
     required this.id,
     required this.name,
+    this.username,
     required this.sex,
     required this.birthYear,
     this.heightCm,
@@ -4356,6 +4380,9 @@ class Profile extends DataClass implements Insertable<Profile> {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
     map['name'] = Variable<String>(name);
+    if (!nullToAbsent || username != null) {
+      map['username'] = Variable<String>(username);
+    }
     map['sex'] = Variable<int>(sex);
     map['birth_year'] = Variable<int>(birthYear);
     if (!nullToAbsent || heightCm != null) {
@@ -4373,6 +4400,9 @@ class Profile extends DataClass implements Insertable<Profile> {
     return ProfilesCompanion(
       id: Value(id),
       name: Value(name),
+      username: username == null && nullToAbsent
+          ? const Value.absent()
+          : Value(username),
       sex: Value(sex),
       birthYear: Value(birthYear),
       heightCm: heightCm == null && nullToAbsent
@@ -4394,6 +4424,7 @@ class Profile extends DataClass implements Insertable<Profile> {
     return Profile(
       id: serializer.fromJson<int>(json['id']),
       name: serializer.fromJson<String>(json['name']),
+      username: serializer.fromJson<String?>(json['username']),
       sex: serializer.fromJson<int>(json['sex']),
       birthYear: serializer.fromJson<int>(json['birthYear']),
       heightCm: serializer.fromJson<double?>(json['heightCm']),
@@ -4408,6 +4439,7 @@ class Profile extends DataClass implements Insertable<Profile> {
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
       'name': serializer.toJson<String>(name),
+      'username': serializer.toJson<String?>(username),
       'sex': serializer.toJson<int>(sex),
       'birthYear': serializer.toJson<int>(birthYear),
       'heightCm': serializer.toJson<double?>(heightCm),
@@ -4420,6 +4452,7 @@ class Profile extends DataClass implements Insertable<Profile> {
   Profile copyWith({
     int? id,
     String? name,
+    Value<String?> username = const Value.absent(),
     int? sex,
     int? birthYear,
     Value<double?> heightCm = const Value.absent(),
@@ -4429,6 +4462,7 @@ class Profile extends DataClass implements Insertable<Profile> {
   }) => Profile(
     id: id ?? this.id,
     name: name ?? this.name,
+    username: username.present ? username.value : this.username,
     sex: sex ?? this.sex,
     birthYear: birthYear ?? this.birthYear,
     heightCm: heightCm.present ? heightCm.value : this.heightCm,
@@ -4440,6 +4474,7 @@ class Profile extends DataClass implements Insertable<Profile> {
     return Profile(
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
+      username: data.username.present ? data.username.value : this.username,
       sex: data.sex.present ? data.sex.value : this.sex,
       birthYear: data.birthYear.present ? data.birthYear.value : this.birthYear,
       heightCm: data.heightCm.present ? data.heightCm.value : this.heightCm,
@@ -4458,6 +4493,7 @@ class Profile extends DataClass implements Insertable<Profile> {
     return (StringBuffer('Profile(')
           ..write('id: $id, ')
           ..write('name: $name, ')
+          ..write('username: $username, ')
           ..write('sex: $sex, ')
           ..write('birthYear: $birthYear, ')
           ..write('heightCm: $heightCm, ')
@@ -4472,6 +4508,7 @@ class Profile extends DataClass implements Insertable<Profile> {
   int get hashCode => Object.hash(
     id,
     name,
+    username,
     sex,
     birthYear,
     heightCm,
@@ -4485,6 +4522,7 @@ class Profile extends DataClass implements Insertable<Profile> {
       (other is Profile &&
           other.id == this.id &&
           other.name == this.name &&
+          other.username == this.username &&
           other.sex == this.sex &&
           other.birthYear == this.birthYear &&
           other.heightCm == this.heightCm &&
@@ -4496,6 +4534,7 @@ class Profile extends DataClass implements Insertable<Profile> {
 class ProfilesCompanion extends UpdateCompanion<Profile> {
   final Value<int> id;
   final Value<String> name;
+  final Value<String?> username;
   final Value<int> sex;
   final Value<int> birthYear;
   final Value<double?> heightCm;
@@ -4505,6 +4544,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
   const ProfilesCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
+    this.username = const Value.absent(),
     this.sex = const Value.absent(),
     this.birthYear = const Value.absent(),
     this.heightCm = const Value.absent(),
@@ -4515,6 +4555,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
   ProfilesCompanion.insert({
     this.id = const Value.absent(),
     required String name,
+    this.username = const Value.absent(),
     required int sex,
     required int birthYear,
     this.heightCm = const Value.absent(),
@@ -4528,6 +4569,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
   static Insertable<Profile> custom({
     Expression<int>? id,
     Expression<String>? name,
+    Expression<String>? username,
     Expression<int>? sex,
     Expression<int>? birthYear,
     Expression<double>? heightCm,
@@ -4538,6 +4580,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (name != null) 'name': name,
+      if (username != null) 'username': username,
       if (sex != null) 'sex': sex,
       if (birthYear != null) 'birth_year': birthYear,
       if (heightCm != null) 'height_cm': heightCm,
@@ -4550,6 +4593,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
   ProfilesCompanion copyWith({
     Value<int>? id,
     Value<String>? name,
+    Value<String?>? username,
     Value<int>? sex,
     Value<int>? birthYear,
     Value<double?>? heightCm,
@@ -4560,6 +4604,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
     return ProfilesCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
+      username: username ?? this.username,
       sex: sex ?? this.sex,
       birthYear: birthYear ?? this.birthYear,
       heightCm: heightCm ?? this.heightCm,
@@ -4577,6 +4622,9 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
     }
     if (name.present) {
       map['name'] = Variable<String>(name.value);
+    }
+    if (username.present) {
+      map['username'] = Variable<String>(username.value);
     }
     if (sex.present) {
       map['sex'] = Variable<int>(sex.value);
@@ -4604,6 +4652,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
     return (StringBuffer('ProfilesCompanion(')
           ..write('id: $id, ')
           ..write('name: $name, ')
+          ..write('username: $username, ')
           ..write('sex: $sex, ')
           ..write('birthYear: $birthYear, ')
           ..write('heightCm: $heightCm, ')
@@ -7367,6 +7416,7 @@ typedef $$ProfilesTableCreateCompanionBuilder =
     ProfilesCompanion Function({
       Value<int> id,
       required String name,
+      Value<String?> username,
       required int sex,
       required int birthYear,
       Value<double?> heightCm,
@@ -7378,6 +7428,7 @@ typedef $$ProfilesTableUpdateCompanionBuilder =
     ProfilesCompanion Function({
       Value<int> id,
       Value<String> name,
+      Value<String?> username,
       Value<int> sex,
       Value<int> birthYear,
       Value<double?> heightCm,
@@ -7401,6 +7452,11 @@ class $$ProfilesTableFilterComposer extends Composer<_$AppDb, $ProfilesTable> {
 
   ColumnFilters<String> get name => $composableBuilder(
     column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get username => $composableBuilder(
+    column: $table.username,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7454,6 +7510,11 @@ class $$ProfilesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get username => $composableBuilder(
+    column: $table.username,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get sex => $composableBuilder(
     column: $table.sex,
     builder: (column) => ColumnOrderings(column),
@@ -7499,6 +7560,9 @@ class $$ProfilesTableAnnotationComposer
 
   GeneratedColumn<String> get name =>
       $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get username =>
+      $composableBuilder(column: $table.username, builder: (column) => column);
 
   GeneratedColumn<int> get sex =>
       $composableBuilder(column: $table.sex, builder: (column) => column);
@@ -7553,6 +7617,7 @@ class $$ProfilesTableTableManager
               ({
                 Value<int> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
+                Value<String?> username = const Value.absent(),
                 Value<int> sex = const Value.absent(),
                 Value<int> birthYear = const Value.absent(),
                 Value<double?> heightCm = const Value.absent(),
@@ -7562,6 +7627,7 @@ class $$ProfilesTableTableManager
               }) => ProfilesCompanion(
                 id: id,
                 name: name,
+                username: username,
                 sex: sex,
                 birthYear: birthYear,
                 heightCm: heightCm,
@@ -7573,6 +7639,7 @@ class $$ProfilesTableTableManager
               ({
                 Value<int> id = const Value.absent(),
                 required String name,
+                Value<String?> username = const Value.absent(),
                 required int sex,
                 required int birthYear,
                 Value<double?> heightCm = const Value.absent(),
@@ -7582,6 +7649,7 @@ class $$ProfilesTableTableManager
               }) => ProfilesCompanion.insert(
                 id: id,
                 name: name,
+                username: username,
                 sex: sex,
                 birthYear: birthYear,
                 heightCm: heightCm,

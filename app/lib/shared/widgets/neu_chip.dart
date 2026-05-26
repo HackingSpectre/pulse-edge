@@ -65,7 +65,7 @@ class NeuChip extends StatelessWidget {
   }
 }
 
-/// Severity badge — colored pill matching the neumorphic language. Used
+/// Severity badge - colored pill matching the neumorphic language. Used
 /// across alert lists.
 class NeuSeverityBadge extends StatelessWidget {
   const NeuSeverityBadge({

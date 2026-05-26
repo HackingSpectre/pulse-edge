@@ -28,7 +28,7 @@ class AlertEngine {
   final NotificationsService _notifications;
   final _uuid = const Uuid();
 
-  // Hardcoded safety thresholds — never trip on a single sample, only on
+  // Hardcoded safety thresholds - never trip on a single sample, only on
   // sustained 30-s windows. See PLAN.md §6.3 / §7.5.
   static const double _hrHighBpm = 180;
   static const double _hrLowBpm = 35;
@@ -40,27 +40,58 @@ class AlertEngine {
   static const double _modelHigh = 0.80;
   static const double _modelMedium = 0.55;
   static const double _baselineSigma = 3.0;
+  static const int _duplicateWindowMs = 30 * 60 * 1000;
 
   Future<void> evaluate(FeatureWindow w, {required double modelP}) async {
     // 1. Hardcoded safety rules (HIGH severity, always notify).
     if (w.hrMean >= _hrHighBpm) {
-      await _fire(w, AlertType.tachycardia, AlertSeverity.high, modelP, _explainTachy(w));
+      await _fire(
+        w,
+        AlertType.tachycardia,
+        AlertSeverity.high,
+        modelP,
+        _explainTachy(w),
+      );
       return;
     }
     if (w.hrMean <= _hrLowBpm) {
-      await _fire(w, AlertType.bradycardia, AlertSeverity.high, modelP, _explainBrady(w));
+      await _fire(
+        w,
+        AlertType.bradycardia,
+        AlertSeverity.high,
+        modelP,
+        _explainBrady(w),
+      );
       return;
     }
     if (w.spo2Mean != null && w.spo2Mean! <= _spo2LowPct) {
-      await _fire(w, AlertType.hypoxia, AlertSeverity.high, modelP, _explainHypoxia(w));
+      await _fire(
+        w,
+        AlertType.hypoxia,
+        AlertSeverity.high,
+        modelP,
+        _explainHypoxia(w),
+      );
       return;
     }
     if (w.tempMean >= _tempHighC) {
-      await _fire(w, AlertType.hyperthermia, AlertSeverity.high, modelP, _explainHyper(w));
+      await _fire(
+        w,
+        AlertType.hyperthermia,
+        AlertSeverity.high,
+        modelP,
+        _explainHyper(w),
+      );
       return;
     }
     if (w.tempMean <= _tempLowC) {
-      await _fire(w, AlertType.hypothermia, AlertSeverity.high, modelP, _explainHypo(w));
+      await _fire(
+        w,
+        AlertType.hypothermia,
+        AlertSeverity.high,
+        modelP,
+        _explainHypo(w),
+      );
       return;
     }
 
@@ -77,13 +108,23 @@ class AlertEngine {
     final modelFlag = modelP >= _modelMedium;
 
     if (modelP >= _modelHigh && baselineFlag) {
-      await _fire(w, AlertType.modelAnomaly, AlertSeverity.high, modelP,
-          _explainPattern(w, baselineZ));
+      await _fire(
+        w,
+        AlertType.modelAnomaly,
+        AlertSeverity.high,
+        modelP,
+        _explainPattern(w, baselineZ),
+      );
     } else if (modelFlag || baselineFlag) {
-      await _fire(w, AlertType.modelAnomaly, AlertSeverity.medium, modelP,
-          _explainPattern(w, baselineZ));
+      await _fire(
+        w,
+        AlertType.modelAnomaly,
+        AlertSeverity.medium,
+        modelP,
+        _explainPattern(w, baselineZ),
+      );
     }
-    // else: log only — no row inserted.
+    // else: log only - no row inserted.
   }
 
   Future<void> _fire(
@@ -93,6 +134,12 @@ class AlertEngine {
     double modelP,
     String explanation,
   ) async {
+    final duplicate = await _anomalyRepo.latestByTypeSince(
+      type.id,
+      w.tsMs - _duplicateWindowMs,
+    );
+    if (duplicate != null) return;
+
     final id = _uuid.v4();
     final metrics = {
       'hrMean': w.hrMean,
@@ -104,15 +151,17 @@ class AlertEngine {
       'activity': w.activity,
       'modelP': modelP,
     };
-    await _anomalyRepo.upsert(AnomaliesCompanion(
-      id: Value(id),
-      tsMs: Value(w.tsMs),
-      severity: Value(sev.code),
-      type: Value(type.id),
-      explanation: Value(explanation),
-      guidance: Value(_guidance(type, sev)),
-      metricsJson: Value(jsonEncode(metrics)),
-    ));
+    await _anomalyRepo.upsert(
+      AnomaliesCompanion(
+        id: Value(id),
+        tsMs: Value(w.tsMs),
+        severity: Value(sev.code),
+        type: Value(type.id),
+        explanation: Value(explanation),
+        guidance: Value(_guidance(type, sev)),
+        metricsJson: Value(jsonEncode(metrics)),
+      ),
+    );
     if (sev == AlertSeverity.high) {
       await _notifications.showHighAlert(
         title: '${type.label} detected',
@@ -128,7 +177,7 @@ class AlertEngine {
     }
   }
 
-  // ─── canned explanations (used until LLM rewrites them on read) ────────
+  // Canned explanations used until the LLM rewrites them on read.
 
   String _explainTachy(FeatureWindow w) =>
       'Heart rate held above 180 bpm for 30 s while activity was '
@@ -139,7 +188,7 @@ class AlertEngine {
       'should be reviewed.';
 
   String _explainHypoxia(FeatureWindow w) =>
-      'Blood oxygen averaged ${w.spo2Mean?.toStringAsFixed(0) ?? '–'}%, below '
+      'Blood oxygen averaged ${w.spo2Mean?.toStringAsFixed(0) ?? '--'}%, below '
       'the safe threshold of 90%.';
 
   String _explainHyper(FeatureWindow w) =>
@@ -151,7 +200,9 @@ class AlertEngine {
       'the watch is in good contact with your wrist.';
 
   String _explainPattern(FeatureWindow w, double? z) {
-    final zPart = z == null ? '' : ' (${z.abs().toStringAsFixed(1)}σ from your usual)';
+    final zPart = z == null
+        ? ''
+        : ' (${z.abs().toStringAsFixed(1)}σ from your usual)';
     return 'Heart-rate pattern looks unusual for this time of day '
         'while ${_activityLabel(w.activity)}$zPart.';
   }
@@ -164,6 +215,10 @@ class AlertEngine {
         'consider mentioning to your doctor at your next visit.';
   }
 
-  String _activityLabel(int a) =>
-      switch (a) { 0 => 'resting', 1 => 'walking', 2 => 'running', _ => 'active' };
+  String _activityLabel(int a) => switch (a) {
+    0 => 'resting',
+    1 => 'walking',
+    2 => 'running',
+    _ => 'active',
+  };
 }

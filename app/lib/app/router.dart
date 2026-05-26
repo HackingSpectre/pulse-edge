@@ -17,6 +17,7 @@ import '../features/settings/device_settings_screen.dart';
 import '../features/settings/model_settings_screen.dart';
 import '../features/settings/privacy_screen.dart';
 import '../features/settings/profile_edit_screen.dart';
+import '../features/settings/security_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/shell/main_shell.dart';
 
@@ -35,6 +36,7 @@ class Routes {
   static const settingsDevice = '/settings/device';
   static const settingsModel = '/settings/model';
   static const settingsPrivacy = '/settings/privacy';
+  static const settingsSecurity = '/settings/security';
   static const settingsCalibration = '/settings/calibration';
   static const settingsAbout = '/settings/about';
 }
@@ -68,17 +70,27 @@ final routerProvider = Provider<GoRouter>((ref) {
     },
     routes: [
       GoRoute(path: Routes.splash, builder: (_, _) => const SplashScreen()),
-      GoRoute(path: Routes.onboarding, builder: (_, _) => const OnboardingFlow()),
+      GoRoute(
+        path: Routes.onboarding,
+        builder: (_, _) => const OnboardingFlow(),
+      ),
       GoRoute(path: Routes.lock, builder: (_, _) => const LockScreen()),
       ShellRoute(
         builder: (context, state, child) => MainShell(child: child),
         routes: [
-          GoRoute(path: Routes.dashboard, builder: (_, _) => const DashboardScreen()),
-          GoRoute(path: Routes.history, builder: (_, _) => const HistoryScreen()),
+          GoRoute(
+            path: Routes.dashboard,
+            builder: (_, _) => const DashboardScreen(),
+          ),
+          GoRoute(
+            path: Routes.history,
+            builder: (_, _) => const HistoryScreen(),
+          ),
           GoRoute(path: Routes.alerts, builder: (_, _) => const AlertsScreen()),
           GoRoute(
             path: Routes.alertDetail,
-            builder: (_, state) => AlertDetailScreen(id: state.pathParameters['id']!),
+            builder: (_, state) =>
+                AlertDetailScreen(id: state.pathParameters['id']!),
           ),
           GoRoute(path: Routes.chat, builder: (_, _) => const ChatScreen()),
           GoRoute(
@@ -100,6 +112,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: Routes.settingsPrivacy,
             builder: (_, _) => const PrivacyScreen(),
+          ),
+          GoRoute(
+            path: Routes.settingsSecurity,
+            builder: (_, _) => const SecurityScreen(),
           ),
           GoRoute(
             path: Routes.settingsCalibration,

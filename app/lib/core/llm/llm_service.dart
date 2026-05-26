@@ -5,6 +5,7 @@ import 'dart:math' as math;
 import 'package:flutter_gemma/flutter_gemma.dart';
 import 'package:rxdart/rxdart.dart';
 
+import '../ble/ble_service.dart';
 import '../db/repositories.dart';
 import '../utils/logger.dart';
 import 'model_download_manager.dart';
@@ -15,12 +16,14 @@ enum LlmStatus { uninitialized, loadingModel, ready, missingModel, failed }
 
 class LlmService {
   LlmService({
+    required this.ble,
     required this.sensorRepo,
     required this.anomalyRepo,
     required this.profileRepo,
     required this.download,
   });
 
+  final BleService ble;
   final SensorRepo sensorRepo;
   final AnomalyRepo anomalyRepo;
   final ProfileRepo profileRepo;
@@ -33,7 +36,7 @@ class LlmService {
   InferenceModel? _model;
   InferenceChat? _chat;
 
-  /// Try to load the local model. Safe to call repeatedly — only initialises
+  /// Try to load the local model. Safe to call repeatedly, only initialises
   /// once. If no model is on disk, status becomes [LlmStatus.missingModel].
   Future<void> ensureLoaded() async {
     if (_status.value == LlmStatus.ready ||
@@ -68,18 +71,23 @@ class LlmService {
     }
   }
 
-  /// Free chat. Yields the assistant message + an injected disclaimer.
+  /// Free chat. Every turn is grounded in the current live wearable snapshot.
   Stream<String> chat(String userMessage) async* {
     await ensureLoaded();
+    final context = await _recentContext();
     if (_status.value != LlmStatus.ready) {
-      final context = await _recentContext();
       yield ScriptedAssistant.reply(userMessage, context: context);
       yield Prompts.disclaimer;
       return;
     }
     try {
-      await _chat!.addQueryChunk(Message.text(text: userMessage, isUser: true));
-      // Stream tokens as they arrive — only TextResponse carries token text.
+      final prompt = Prompts.chatTurn(
+        userMessage: userMessage,
+        healthContext: context.toPromptContext(),
+        profileName: context.profileName,
+      );
+      await _chat!.addQueryChunk(Message.text(text: prompt, isUser: true));
+      // Stream tokens as they arrive. Only TextResponse carries token text.
       await for (final r in _chat!.generateChatResponseAsync()) {
         if (r case TextResponse(:final token)) {
           yield token;
@@ -88,7 +96,7 @@ class LlmService {
       yield Prompts.disclaimer;
     } catch (e) {
       log.e('chat failed', error: e);
-      yield 'Sorry — I hit an error. Please try again.';
+      yield 'Sorry - I hit an error. Please try again.';
       yield Prompts.disclaimer;
     }
   }
@@ -178,7 +186,19 @@ class LlmService {
         .where((v) => v.isFinite)
         .toList();
 
+    final profile = await profileRepo.get();
     return HealthChatContext(
+      profileName: profile?.name,
+      username: profile?.username,
+      liveHr: ble.latestHr,
+      liveSpo2: ble.latestSpo2,
+      liveTemp: ble.latestTemp,
+      liveActivity: ble.latestActivity,
+      liveMotion: ble.latestImu?.magnitudeMean,
+      deviceState: ble.status.state.name,
+      deviceName: ble.status.deviceName,
+      contactOk: ble.status.contactOk,
+      sensorOk: ble.status.sensorOk,
       sampleCount: ppg.length,
       hrMin: ScriptedAssistant.minOrNull(hrs),
       hrMedian: ScriptedAssistant.median(hrs),
@@ -195,7 +215,7 @@ class LlmService {
   }
 
   String _scriptedExplain(String type, String metricsJson) {
-    return 'Pulse Edge spotted a $type pattern (${metricsJson.length > 80 ? "${metricsJson.substring(0, 80)}…" : metricsJson}). '
+    return 'Pulse Edge spotted a $type pattern (${metricsJson.length > 80 ? "${metricsJson.substring(0, 80)}..." : metricsJson}). '
         'Sit, breathe slowly, and check again in a few minutes. If it persists, '
         'contact your doctor.';
   }

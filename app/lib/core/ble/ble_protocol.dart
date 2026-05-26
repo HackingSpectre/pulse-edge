@@ -1,4 +1,4 @@
-/// Pulse Edge BLE GATT contract — must stay in sync with the ESP32
+/// Pulse Edge BLE GATT contract - must stay in sync with the ESP32
 /// firmware in /firmware/lib/ble_service.
 ///
 /// All UUIDs are 128-bit, randomly generated for this project. Each value
@@ -21,7 +21,7 @@ class BleUuids {
   /// Battery + status notify (5 s).
   static const String charStatus = 'b9e3a004-9c5b-4f0e-8b3a-1f6f8c2c8a01';
 
-  /// Vibration / haptic alert write — phone tells the wearable to buzz.
+  /// Vibration / haptic alert write - phone tells the wearable to buzz.
   static const String charVibrate = 'b9e3a005-9c5b-4f0e-8b3a-1f6f8c2c8a01';
 
   /// Config R/W (sample rate, demo mode).

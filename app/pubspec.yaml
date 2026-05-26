@@ -1,5 +1,5 @@
 name: pulse_edge
-description: Edge AI wearable health monitor — fully on-device anomaly detection and decision support.
+description: Edge AI wearable health monitor - fully on-device anomaly detection and decision support.
 publish_to: 'none'
 version: 0.1.0+1
 

@@ -7,11 +7,7 @@ import 'neu_surface.dart';
 /// Neumorphic toggle switch. Track is sunken; thumb is raised. Animates
 /// the thumb across when toggled. Always 48dp tall hit area.
 class NeuSwitch extends StatelessWidget {
-  const NeuSwitch({
-    super.key,
-    required this.value,
-    required this.onChanged,
-  });
+  const NeuSwitch({super.key, required this.value, required this.onChanged});
 
   final bool value;
   final ValueChanged<bool>? onChanged;
@@ -62,12 +58,14 @@ class NeuSwitch extends StatelessWidget {
                           width: _thumb,
                           height: _thumb,
                           decoration: BoxDecoration(
-                            color: value && !disabled ? T.primary : T.surfaceRaised,
+                            color: value && !disabled
+                                ? T.primary
+                                : T.surfaceRaised,
                             shape: BoxShape.circle,
                             boxShadow: T.raisedSm(),
                           ),
                           child: value
-                              ? const Icon(
+                              ? Icon(
                                   Icons.check_rounded,
                                   size: 16,
                                   color: T.inkInverse,

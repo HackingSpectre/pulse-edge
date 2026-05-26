@@ -12,7 +12,8 @@ class SettingsStore {
   static const _kCalibrationCompleteMs = 'calibration_complete_ms';
 
   bool get onboardingComplete => _prefs.getBool(_kOnboardingComplete) ?? false;
-  Future<void> setOnboardingComplete(bool v) => _prefs.setBool(_kOnboardingComplete, v);
+  Future<void> setOnboardingComplete(bool v) =>
+      _prefs.setBool(_kOnboardingComplete, v);
 
   bool get demoMode => _prefs.getBool(_kDemoMode) ?? true;
   Future<void> setDemoMode(bool v) => _prefs.setBool(_kDemoMode, v);
@@ -21,8 +22,10 @@ class SettingsStore {
   Future<void> setAutoLockMinutes(int v) => _prefs.setInt(_kAutoLockMinutes, v);
 
   int? get calibrationCompleteMs => _prefs.getInt(_kCalibrationCompleteMs);
-  Future<void> setCalibrationComplete() =>
-      _prefs.setInt(_kCalibrationCompleteMs, DateTime.now().millisecondsSinceEpoch);
+  Future<void> setCalibrationComplete() => _prefs.setInt(
+    _kCalibrationCompleteMs,
+    DateTime.now().millisecondsSinceEpoch,
+  );
 
   Future<void> wipe() async {
     final keys = _prefs.getKeys().toSet();

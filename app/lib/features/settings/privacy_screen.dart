@@ -25,11 +25,12 @@ class PrivacyScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.shield_rounded,
-                    size: T.iconXl, color: T.primary),
+                Icon(Icons.shield_rounded, size: T.iconXl, color: T.primary),
                 const SizedBox(height: T.space3),
-                Text('Everything stays on this phone',
-                    style: T.h2.copyWith(color: T.primary)),
+                Text(
+                  'Everything stays on this phone',
+                  style: T.h2.copyWith(color: T.primary),
+                ),
                 const SizedBox(height: T.space2),
                 Text(
                   'Your sensor data, anomaly history, profile, chat messages, '
@@ -41,32 +42,34 @@ class PrivacyScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: T.space5),
-          NeuListGroup(children: [
-            const NeuListTile(
-              icon: Icons.cloud_off_rounded,
-              title: 'No backend',
-              subtitle: 'Pulse Edge does not run any servers.',
-            ),
-            const NeuListTile(
-              icon: Icons.psychology_rounded,
-              title: 'On-device assistant',
-              subtitle:
-                  'The AI chat is a small language model loaded into RAM on '
-                  'your phone. Nothing leaves the device.',
-            ),
-            const NeuListTile(
-              icon: Icons.bluetooth_rounded,
-              title: 'Bluetooth only',
-              subtitle: 'The wearable communicates over BLE — no Wi-Fi, no GSM.',
-            ),
-            NeuListTile(
-              icon: Icons.download_for_offline_rounded,
-              title: 'One-time downloads',
-              subtitle:
-                  'The only network use is the optional model download. After '
-                  "that you can be permanently offline.",
-            ),
-          ]),
+          NeuListGroup(
+            children: [
+              const NeuListTile(
+                icon: Icons.cloud_off_rounded,
+                title: 'No backend',
+                subtitle: 'Pulse Edge does not run any servers.',
+              ),
+              const NeuListTile(
+                icon: Icons.psychology_rounded,
+                title: 'On-device assistant',
+                subtitle:
+                    'The assistant uses live local data. After the download, the edge model runs on your phone.',
+              ),
+              const NeuListTile(
+                icon: Icons.bluetooth_rounded,
+                title: 'Bluetooth only',
+                subtitle:
+                    'The wearable communicates over BLE. No Wi-Fi, no GSM.',
+              ),
+              NeuListTile(
+                icon: Icons.download_for_offline_rounded,
+                title: 'One-time downloads',
+                subtitle:
+                    'The only network use is the optional model download. After '
+                    "that you can be permanently offline.",
+              ),
+            ],
+          ),
           const SizedBox(height: T.space5),
           NeuButton(
             label: 'Erase everything on this device',
@@ -87,7 +90,7 @@ class PrivacyScreen extends ConsumerWidget {
         title: const Text('Erase everything?'),
         content: const Text(
           'This deletes your profile, baseline, alert history, chats, and '
-          'the AI model. The app will return to first-launch state.',
+          'the offline model. The app will return to first-launch state.',
         ),
         actions: [
           TextButton(

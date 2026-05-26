@@ -117,9 +117,11 @@ class _NeuTextFieldState extends State<NeuTextField> {
             child: Row(
               children: [
                 if (widget.icon != null) ...[
-                  Icon(widget.icon,
-                      size: T.iconSm,
-                      color: disabled ? T.inkDisabled : T.inkSoft),
+                  Icon(
+                    widget.icon,
+                    size: T.iconSm,
+                    color: disabled ? T.inkDisabled : T.inkSoft,
+                  ),
                   const SizedBox(width: T.space3),
                 ],
                 Expanded(

@@ -2,8 +2,8 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import '../utils/logger.dart';
 
-/// Wrapper around flutter_local_notifications. Three channels — HIGH, MEDIUM,
-/// LOW — so users can mute MEDIUM/LOW from system settings without missing
+/// Wrapper around flutter_local_notifications. Three channels - HIGH, MEDIUM,
+/// LOW - so users can mute MEDIUM/LOW from system settings without missing
 /// HIGH severity alerts.
 class NotificationsService {
   NotificationsService();
@@ -38,8 +38,10 @@ class NotificationsService {
       android: AndroidInitializationSettings('@mipmap/ic_launcher'),
     );
     await _plugin.initialize(settings: settings);
-    final android = _plugin.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
+    final android = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     await android?.createNotificationChannel(_highChannel);
     await android?.createNotificationChannel(_mediumChannel);
     await android?.createNotificationChannel(_lowChannel);

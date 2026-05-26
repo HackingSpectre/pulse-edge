@@ -15,7 +15,8 @@ class PulseEdgeApp extends ConsumerWidget {
       title: 'Pulse Edge',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
-      themeMode: ThemeMode.light,
+      darkTheme: AppTheme.dark(),
+      themeMode: ThemeMode.system,
       routerConfig: router,
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
@@ -29,7 +30,10 @@ class PulseEdgeApp extends ConsumerWidget {
         final mq = MediaQuery.of(context);
         return MediaQuery(
           data: mq.copyWith(
-            textScaler: mq.textScaler.clamp(minScaleFactor: 0.85, maxScaleFactor: 1.30),
+            textScaler: mq.textScaler.clamp(
+              minScaleFactor: 0.85,
+              maxScaleFactor: 1.30,
+            ),
           ),
           child: child ?? const SizedBox.shrink(),
         );

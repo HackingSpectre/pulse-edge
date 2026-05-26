@@ -24,8 +24,8 @@ import 'sensor_packet.dart';
 /// decoded sensor frames into the storage + ML pipeline.
 ///
 /// In demo mode (default until the user pairs a real device) the service
-/// uses [MockDeviceSource] so the entire app — including charts, alerts,
-/// chat context — works on an emulator with no wearable present.
+/// uses [MockDeviceSource] so the entire app - including charts, alerts,
+/// chat context - works on an emulator with no wearable present.
 class BleService {
   BleService({
     required this.settings,
@@ -67,6 +67,11 @@ class BleService {
   Stream<double?> get temp$ => _liveTemp.stream;
   Stream<int> get activity$ => _liveActivity.stream;
   Stream<ImuFrame?> get imu$ => _liveImu.stream;
+  double? get latestHr => _liveHr.valueOrNull;
+  double? get latestSpo2 => _liveSpo2.valueOrNull;
+  double? get latestTemp => _liveTemp.valueOrNull;
+  int get latestActivity => _liveActivity.valueOrNull ?? 0;
+  ImuFrame? get latestImu => _liveImu.valueOrNull;
 
   MockDeviceSource? _mock;
   StreamSubscription<dynamic>? _ppgSub;
@@ -194,7 +199,7 @@ class BleService {
         timeout: const Duration(seconds: 18),
         mtu: 247,
         license: License
-            .free, // Educational use — see flutter_blue_plus License enum.
+            .free, // Educational use - see flutter_blue_plus License enum.
       );
       await deviceRepo.savePaired(
         id: _activeDeviceId,

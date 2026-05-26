@@ -18,8 +18,7 @@ class StepIntro extends StatelessWidget {
             size: NeuSize.lg,
             borderRadius: BorderRadius.circular(80),
             padding: const EdgeInsets.all(T.space7),
-            child: const Icon(Icons.favorite_rounded,
-                size: 56, color: T.primary),
+            child: Icon(Icons.favorite_rounded, size: 56, color: T.primary),
           ),
           const SizedBox(height: T.space7),
           Text('Welcome to', style: T.bodySoft),
@@ -29,13 +28,14 @@ class StepIntro extends StatelessWidget {
           Text(
             'A private, on-device wellness companion that reads your wearable, '
             'learns your normal, and quietly flags what looks unusual.',
-            style: T.body.copyWith(color: T.inkSoft, fontSize: 15, height: 1.55),
+            style: T.body.copyWith(
+              color: T.inkSoft,
+              fontSize: 15,
+              height: 1.55,
+            ),
           ),
           const SizedBox(height: T.space7),
-          _Pill(
-            icon: Icons.cloud_off_rounded,
-            label: 'Works fully offline',
-          ),
+          _Pill(icon: Icons.cloud_off_rounded, label: 'Works fully offline'),
           const SizedBox(height: T.space3),
           _Pill(
             icon: Icons.lock_rounded,

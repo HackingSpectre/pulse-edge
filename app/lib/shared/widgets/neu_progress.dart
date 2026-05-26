@@ -47,13 +47,6 @@ class NeuLinearProgress extends StatelessWidget {
               decoration: BoxDecoration(
                 color: color ?? T.primary,
                 borderRadius: BorderRadius.circular(height / 2),
-                boxShadow: [
-                  BoxShadow(
-                    color: (color ?? T.primary).withValues(alpha: 0.40),
-                    offset: const Offset(0, 2),
-                    blurRadius: 6,
-                  ),
-                ],
               ),
             ),
           ),
@@ -64,7 +57,7 @@ class NeuLinearProgress extends StatelessWidget {
 }
 
 /// The hero metric ring on the dashboard (HR, etc.). Sunken track with a
-/// glowing primary stroke, big numeric label centered.
+/// crisp primary stroke and big numeric label centered.
 class NeuMetricRing extends StatelessWidget {
   const NeuMetricRing({
     super.key,
@@ -81,7 +74,7 @@ class NeuMetricRing extends StatelessWidget {
   final String label;
   final String unit;
 
-  /// 0..1 — how full the ring is.
+  /// 0..1 - how full the ring is.
   final double fill;
   final Color? color;
   final double size;
@@ -124,8 +117,10 @@ class NeuMetricRing extends StatelessWidget {
               const SizedBox(height: T.space2),
               Text(value, style: T.metricHero),
               const SizedBox(height: T.space1),
-              Text(unit.toUpperCase(),
-                  style: T.label.copyWith(color: T.inkMuted)),
+              Text(
+                unit.toUpperCase(),
+                style: T.label.copyWith(color: T.inkMuted),
+              ),
               if (subtitle != null) ...[
                 const SizedBox(height: T.space3),
                 subtitle!,
@@ -162,21 +157,6 @@ class _RingPainter extends CustomPainter {
       ..strokeWidth = 14
       ..color = T.shadowLight.withValues(alpha: 0.7);
     canvas.drawCircle(center.translate(-1, -1), radius, inner);
-
-    // Glow under arc.
-    final glow = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 18
-      ..strokeCap = StrokeCap.round
-      ..color = color.withValues(alpha: 0.20)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: radius),
-      -math.pi / 2,
-      2 * math.pi * value,
-      false,
-      glow,
-    );
 
     // Arc.
     final arc = Paint()

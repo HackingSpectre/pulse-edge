@@ -9,11 +9,7 @@ import 'package:path_provider/path_provider.dart';
 
 import '../utils/logger.dart';
 
-/// Model bundle the app downloads on first launch.
-///
-/// Default points at the public LiteRT-LM Gemma 3 1B build hosted by Google.
-/// Can be overridden by the user from Settings → AI Assistant → Custom URL
-/// (advanced).
+/// Model bundle the app downloads when the user enables richer local chat.
 class ModelBundle {
   const ModelBundle({
     required this.name,
@@ -29,15 +25,15 @@ class ModelBundle {
   final String sha256;
   final String notes;
 
-  static const gemma3Lite = ModelBundle(
-    name: 'Gemma 3 1B (LiteRT-LM)',
-    // Hosted under the Google AI Edge release; users must accept Gemma terms
-    // on first download. The URL is configurable to support a self-hosted
-    // mirror for offline lab environments.
-    url: 'https://huggingface.co/google/gemma-3-1b-it-qat-q4_0-gguf/resolve/main/gemma-3-1b-it-q4_0.gguf',
+  static const edgeModel = ModelBundle(
+    name: 'Offline edge model',
+    // The URL is configurable to support a self-hosted mirror for offline
+    // lab environments.
+    url:
+        'https://huggingface.co/google/gemma-3-1b-it-qat-q4_0-gguf/resolve/main/gemma-3-1b-it-q4_0.gguf',
     sizeBytes: 720 * 1024 * 1024,
     sha256: '', // empty = skip integrity check (set when self-hosting).
-    notes: 'Quantized Q4. Approximate size 720 MB.',
+    notes: 'Runs locally after a one-time download.',
   );
 }
 
@@ -61,7 +57,7 @@ class DownloadProgress {
 /// Resumable downloader with SHA-256 verify. Writes to `<docs>/<bundle>.bin`.
 /// Re-running from a partial file uses an HTTP Range header.
 class ModelDownloadManager {
-  ModelBundle bundle = ModelBundle.gemma3Lite;
+  ModelBundle bundle = ModelBundle.edgeModel;
 
   final _progress = StreamController<DownloadProgress>.broadcast();
   Stream<DownloadProgress> get progress$ => _progress.stream;
@@ -115,7 +111,11 @@ class ModelDownloadManager {
         _sink!.add(chunk);
         received += chunk.length;
         if (received - _last.received > 256 * 1024) {
-          _emit(state: DownloadState.downloading, received: received, total: total);
+          _emit(
+            state: DownloadState.downloading,
+            received: received,
+            total: total,
+          );
         }
       }
       await _sink!.flush();
@@ -159,16 +159,13 @@ class ModelDownloadManager {
   Future<bool> _verifyHash(File f) async {
     final stream = f.openRead();
     final digest = await sha256.bind(stream).first;
-    final hex = digest.bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+    final hex = digest.bytes
+        .map((b) => b.toRadixString(16).padLeft(2, '0'))
+        .join();
     return hex == bundle.sha256.toLowerCase();
   }
 
-  void _emit({
-    DownloadState? state,
-    int? received,
-    int? total,
-    String? error,
-  }) {
+  void _emit({DownloadState? state, int? received, int? total, String? error}) {
     _last = DownloadProgress(
       state: state ?? _last.state,
       received: received ?? _last.received,

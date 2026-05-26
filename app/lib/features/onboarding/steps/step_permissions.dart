@@ -106,7 +106,7 @@ class _StepPermissionsState extends State<StepPermissions> {
             color: T.primarySoft,
             child: Row(
               children: [
-                const Icon(Icons.shield_rounded, color: T.primary),
+                Icon(Icons.shield_rounded, color: T.primary),
                 const SizedBox(width: T.space3),
                 Expanded(
                   child: Text(
@@ -196,20 +196,19 @@ class _Granted extends StatelessWidget {
         horizontal: T.space3,
         vertical: T.space2,
       ),
-      decoration: BoxDecoration(
-        color: T.successSoft,
-        borderRadius: T.brPill,
-      ),
+      decoration: BoxDecoration(color: T.successSoft, borderRadius: T.brPill),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.check_rounded, size: T.iconSm, color: T.success),
+          Icon(Icons.check_rounded, size: T.iconSm, color: T.success),
           const SizedBox(width: T.space2),
-          Text('Granted',
-              style: T.caption.copyWith(
-                color: T.success,
-                fontWeight: FontWeight.w700,
-              )),
+          Text(
+            'Granted',
+            style: T.caption.copyWith(
+              color: T.success,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
         ],
       ),
     );

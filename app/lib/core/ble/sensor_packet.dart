@@ -6,7 +6,7 @@ class SensorFrame {
   SensorFrame._();
 }
 
-/// PPG window — N samples + the firmware-derived HR + SpO₂.
+/// PPG window - N samples + the firmware-derived HR + SpO₂.
 ///
 /// Layout (little-endian):
 ///   uint16 seq
@@ -77,7 +77,7 @@ int _crc8(Uint8List data) {
   return crc;
 }
 
-/// Temperature frame — single Celsius sample.
+/// Temperature frame - single Celsius sample.
 class TempFrame {
   TempFrame({required this.tsMs, required this.celsius});
   final int tsMs;
@@ -92,7 +92,7 @@ class TempFrame {
   }
 }
 
-/// IMU frame — last sample + window aggregates.
+/// IMU frame - last sample + window aggregates.
 class ImuFrame {
   ImuFrame({
     required this.tsMs,
@@ -127,7 +127,7 @@ class ImuFrame {
   }
 }
 
-/// Status frame — battery + flags.
+/// Status frame - battery + flags.
 class StatusFrame {
   StatusFrame({
     required this.batteryPct,

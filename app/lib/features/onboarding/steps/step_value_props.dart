@@ -16,7 +16,7 @@ class StepValueProps extends StatelessWidget {
           Text('What you get', style: T.h1),
           const SizedBox(height: T.space2),
           Text(
-            'Pulse Edge is a wearable + an AI assistant — both quiet, both on '
+            'Pulse Edge is a wearable and an AI assistant. Both are quiet, both on '
             "your phone, both working when you're offline.",
             style: T.bodySoft,
           ),
@@ -25,7 +25,8 @@ class StepValueProps extends StatelessWidget {
             icon: Icons.monitor_heart_rounded,
             color: T.danger,
             title: 'Live vitals',
-            body: 'Heart rate, oxygen, skin temperature and movement — '
+            body:
+                'Heart rate, oxygen, skin temperature and movement, '
                 'updated every quarter-second via Bluetooth.',
           ),
           const SizedBox(height: T.space4),
@@ -33,7 +34,8 @@ class StepValueProps extends StatelessWidget {
             icon: Icons.show_chart_rounded,
             color: T.primary,
             title: 'Personal baseline',
-            body: 'After a week the app learns your usual rhythm by '
+            body:
+                'After a week the app learns your usual rhythm by '
                 'time-of-day and activity, instead of comparing you to '
                 'a population average.',
           ),
@@ -42,7 +44,8 @@ class StepValueProps extends StatelessWidget {
             icon: Icons.notifications_active_rounded,
             color: T.warning,
             title: 'Quiet alerts',
-            body: 'Two layers of safety nets — a hard rule book + a learned '
+            body:
+                'Two layers of safety nets: a hard rule book and a learned '
                 'pattern model. Only sustained 30-second windows trigger.',
           ),
           const SizedBox(height: T.space4),
@@ -50,8 +53,9 @@ class StepValueProps extends StatelessWidget {
             icon: Icons.chat_bubble_rounded,
             color: T.info,
             title: 'On-device assistant',
-            body: 'A small language model lives on your phone. Ask it about '
-                "your data; it never phones home.",
+            body:
+                'Download the offline edge model to ask richer questions '
+                'about your data on this phone.',
           ),
           const SizedBox(height: T.space5),
         ],

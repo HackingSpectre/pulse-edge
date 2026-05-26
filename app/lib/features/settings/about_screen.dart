@@ -26,8 +26,11 @@ class AboutScreen extends StatelessWidget {
                   size: NeuSize.lg,
                   borderRadius: BorderRadius.circular(60),
                   padding: const EdgeInsets.all(T.space5),
-                  child: const Icon(Icons.favorite_rounded,
-                      size: 40, color: T.primary),
+                  child: Icon(
+                    Icons.favorite_rounded,
+                    size: 40,
+                    color: T.primary,
+                  ),
                 ),
                 const SizedBox(height: T.space4),
                 Text('Pulse Edge', style: T.h1),
@@ -37,38 +40,40 @@ class AboutScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: T.space5),
-          NeuListGroup(children: [
-            NeuListTile(
-              icon: Icons.code_rounded,
-              title: 'Source code',
-              subtitle: 'Final-year project — see the project README',
-            ),
-            NeuListTile(
-              icon: Icons.dataset_rounded,
-              title: 'Trained on WESAD',
-              subtitle: 'Schmidt et al., 2018 — public dataset',
-            ),
-            NeuListTile(
-              icon: Icons.psychology_rounded,
-              title: 'Assistant',
-              subtitle: 'Gemma 3 1B (Q4_K_M), via flutter_gemma',
-            ),
-            NeuListTile(
-              icon: Icons.style_rounded,
-              title: 'Design language',
-              subtitle: 'Neumorphism Club design system',
-            ),
-            NeuListTile(
-              icon: Icons.gavel_rounded,
-              title: 'Open-source licenses',
-              subtitle: 'View the third-party software used',
-              onTap: () => showLicensePage(
-                context: context,
-                applicationName: 'Pulse Edge',
-                applicationVersion: '0.1.0',
+          NeuListGroup(
+            children: [
+              NeuListTile(
+                icon: Icons.code_rounded,
+                title: 'Source code',
+                subtitle: 'Final-year project. See the project README',
               ),
-            ),
-          ]),
+              NeuListTile(
+                icon: Icons.dataset_rounded,
+                title: 'Trained on WESAD',
+                subtitle: 'Schmidt et al., 2018 public dataset',
+              ),
+              NeuListTile(
+                icon: Icons.psychology_rounded,
+                title: 'Assistant',
+                subtitle: 'Offline edge model support',
+              ),
+              NeuListTile(
+                icon: Icons.style_rounded,
+                title: 'Design language',
+                subtitle: 'Neumorphism Club design system',
+              ),
+              NeuListTile(
+                icon: Icons.gavel_rounded,
+                title: 'Open-source licenses',
+                subtitle: 'View the third-party software used',
+                onTap: () => showLicensePage(
+                  context: context,
+                  applicationName: 'Pulse Edge',
+                  applicationVersion: '0.1.0',
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: T.space5),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: T.space3),

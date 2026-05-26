@@ -4,10 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app/app.dart';
 import 'core/providers.dart';
+import 'core/theme/tokens.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Lock to portrait — neumorphic layouts are tuned for narrow widths.
+  // Lock to portrait - neumorphic layouts are tuned for narrow widths.
   await SystemChrome.setPreferredOrientations(const [
     DeviceOrientation.portraitUp,
   ]);
@@ -38,9 +39,9 @@ class _BootSplash extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: ColoredBox(color: Color(0xFFE7E5E4)),
+      home: ColoredBox(color: T.surface),
     );
   }
 }

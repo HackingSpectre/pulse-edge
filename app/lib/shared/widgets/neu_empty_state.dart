@@ -13,7 +13,7 @@ class NeuEmptyState extends StatelessWidget {
     required this.message,
     this.actionLabel,
     this.onAction,
-    this.tone = T.primary,
+    this.tone,
   });
 
   final IconData icon;
@@ -21,33 +21,42 @@ class NeuEmptyState extends StatelessWidget {
   final String message;
   final String? actionLabel;
   final VoidCallback? onAction;
-  final Color tone;
+  final Color? tone;
 
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 380),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            NeuSurface(
-              depth: NeuDepth.raised,
-              size: NeuSize.lg,
-              borderRadius: BorderRadius.circular(80),
-              padding: const EdgeInsets.all(T.space7),
-              child: Icon(icon, size: T.iconXl + 8, color: tone),
+      child: Builder(
+        builder: (context) {
+          final accent = tone ?? T.primary;
+          return ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 380),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                NeuSurface(
+                  depth: NeuDepth.raised,
+                  size: NeuSize.lg,
+                  borderRadius: BorderRadius.circular(80),
+                  padding: const EdgeInsets.all(T.space7),
+                  child: Icon(icon, size: T.iconXl + 8, color: accent),
+                ),
+                const SizedBox(height: T.space6),
+                Text(title, style: T.h1, textAlign: TextAlign.center),
+                const SizedBox(height: T.space2),
+                Text(message, style: T.bodySoft, textAlign: TextAlign.center),
+                if (actionLabel != null && onAction != null) ...[
+                  const SizedBox(height: T.space6),
+                  NeuButton(
+                    label: actionLabel!,
+                    onPressed: onAction,
+                    variant: NeuButtonVariant.filled,
+                  ),
+                ],
+              ],
             ),
-            const SizedBox(height: T.space6),
-            Text(title, style: T.h1, textAlign: TextAlign.center),
-            const SizedBox(height: T.space2),
-            Text(message, style: T.bodySoft, textAlign: TextAlign.center),
-            if (actionLabel != null && onAction != null) ...[
-              const SizedBox(height: T.space6),
-              NeuButton(label: actionLabel!, onPressed: onAction, variant: NeuButtonVariant.filled),
-            ],
-          ],
-        ),
+          );
+        },
       ),
     );
   }

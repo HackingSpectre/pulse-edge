@@ -2,19 +2,21 @@ import '../db/database.dart';
 
 /// System and user prompts shared by all LLM modes.
 ///
-/// The disclaimer footer is **always** code-injected after generation rather
-/// than baked into the system prompt — the prompt can be jailbroken;
+/// The disclaimer footer is always code-injected after generation rather
+/// than baked into the system prompt. The prompt can be jailbroken;
 /// post-generation surgery cannot.
 class Prompts {
   Prompts._();
 
   static const String disclaimer =
-      '\n\n— Pulse Edge is not a medical device. It does not diagnose, treat, '
+      '\n\nPulse Edge is not a medical device. It does not diagnose, treat, '
       'or prevent any condition. If you feel unwell, contact a healthcare '
       'professional.';
 
   static String system({Profile? profile}) {
-    final age = profile == null ? null : DateTime.now().year - profile.birthYear;
+    final age = profile == null
+        ? null
+        : DateTime.now().year - profile.birthYear;
     final demo = age == null
         ? ''
         : ' The user is approximately $age years old.';
@@ -34,7 +36,31 @@ $demo
 ''';
   }
 
-  static String explainAnomaly({required String type, required String metricsJson}) {
+  static String chatTurn({
+    required String userMessage,
+    required String healthContext,
+    String? profileName,
+  }) {
+    final nameRule = profileName == null || profileName.trim().isEmpty
+        ? ''
+        : '- Address the user by their name naturally when it fits: ${profileName.trim()}.';
+    return '''
+Use the live health context below as the source of truth for this response.
+If the live data is missing, say what is missing. Do not invent readings.
+$nameRule
+
+Live health context:
+$healthContext
+
+User message:
+$userMessage
+''';
+  }
+
+  static String explainAnomaly({
+    required String type,
+    required String metricsJson,
+  }) {
     return '''
 Briefly explain to the user (one short paragraph, ≤80 words) what their wearable
 flagged. Use plain language. Do NOT diagnose. Do NOT recommend medication.

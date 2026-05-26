@@ -54,7 +54,7 @@ class BackgroundController {
   }
 }
 
-/// Entry point that the foreground task isolate runs. Kept minimal — BLE
+/// Entry point that the foreground task isolate runs. Kept minimal - BLE
 /// stays in the main isolate, this just exists to satisfy the task lifecycle.
 @pragma('vm:entry-point')
 void _bgEntryPoint() {

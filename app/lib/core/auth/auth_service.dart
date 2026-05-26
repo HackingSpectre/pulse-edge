@@ -11,16 +11,17 @@ import 'package:local_auth_darwin/local_auth_darwin.dart';
 import '../utils/logger.dart';
 
 enum PinResult { ok, wrong, lockedOut, notSet }
+
 enum BiometricResult { ok, unavailable, cancelled, failed }
 
 /// Local authentication.
 ///
-/// PIN: 4–8 digits. Stored as PBKDF2-HMAC-SHA256 with a 16-byte salt and
+/// PIN: 4-8 digits. Stored as PBKDF2-HMAC-SHA256 with a 16-byte salt and
 /// 200_000 iterations (overkill for offline brute force on Android Keystore-
 /// backed storage, but cheap enough). Lockout after 5 consecutive failures
 /// for 30 seconds, doubling for each additional failure.
 ///
-/// Biometric: passes through to platform; no key release on success — we use
+/// Biometric: passes through to platform; no key release on success - we use
 /// it as a UX gate only. The DB encryption key (future) is gated by PIN.
 class AuthService {
   AuthService(this._storage);
@@ -69,7 +70,8 @@ class AuthService {
       await _storage.delete(key: _kLockoutUntilMs);
       return PinResult.ok;
     }
-    final fails = (int.tryParse(await _storage.read(key: _kFails) ?? '0') ?? 0) + 1;
+    final fails =
+        (int.tryParse(await _storage.read(key: _kFails) ?? '0') ?? 0) + 1;
     await _storage.write(key: _kFails, value: '$fails');
     if (fails >= 5) {
       // Exponential backoff: 30 s × 2^(fails-5).
@@ -95,7 +97,9 @@ class AuthService {
     }
   }
 
-  Future<BiometricResult> authenticateBiometric({String reason = 'Unlock Pulse Edge'}) async {
+  Future<BiometricResult> authenticateBiometric({
+    String reason = 'Unlock Pulse Edge',
+  }) async {
     try {
       final ok = await _local.authenticate(
         localizedReason: reason,

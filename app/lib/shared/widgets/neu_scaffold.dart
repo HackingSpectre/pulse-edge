@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/tokens.dart';
+import 'chassis_painter.dart';
 import 'neu_button.dart';
 
 /// Page-level wrapper. Sets the system UI overlay, provides safe-area
@@ -46,7 +47,10 @@ class NeuScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget content = Padding(padding: padding, child: body ?? const SizedBox.shrink());
+    Widget content = Padding(
+      padding: padding,
+      child: body ?? const SizedBox.shrink(),
+    );
     if (scrollable) {
       content = SingleChildScrollView(
         padding: padding,
@@ -61,25 +65,51 @@ class NeuScaffold extends StatelessWidget {
         backgroundColor: backgroundColor ?? T.surface,
         resizeToAvoidBottomInset: resizeToAvoidBottomInset,
         floatingActionButton: floatingActionButton,
-        body: SafeArea(
-          bottom: false,
-          child: Column(
-            children: [
-              if (title != null || showBack || actions != null || leading != null)
-                _NeuAppBar(
-                  title: title,
-                  leading: leading,
-                  actions: actions,
-                  showBack: showBack,
-                  onBack: onBack ?? () => Navigator.of(context).maybePop(),
-                ),
-              Expanded(child: content),
-              ?bottom,
-            ],
+        body: NeuChassisBackground(
+          child: SafeArea(
+            bottom: false,
+            child: Column(
+              children: [
+                if (title != null ||
+                    showBack ||
+                    actions != null ||
+                    leading != null)
+                  _NeuAppBar(
+                    title: title,
+                    leading: leading,
+                    actions: actions,
+                    showBack: showBack,
+                    onBack: onBack ?? () => Navigator.of(context).maybePop(),
+                  ),
+                Expanded(child: content),
+                ?bottom,
+              ],
+            ),
           ),
         ),
         bottomNavigationBar: bottomNavigationBar,
       ),
+    );
+  }
+}
+
+class NeuChassisBackground extends StatelessWidget {
+  const NeuChassisBackground({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final chassisColor = Theme.of(context).brightness == Brightness.dark
+        ? Colors.white.withValues(alpha: 0.055)
+        : Colors.black.withValues(alpha: 0.055);
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: CustomPaint(painter: ChassisPainter(color: chassisColor)),
+        ),
+        child,
+      ],
     );
   }
 }
@@ -118,7 +148,8 @@ class _NeuAppBar extends StatelessWidget {
             )
           else
             ?leading,
-          if ((showBack || leading != null) && title != null) const SizedBox(width: T.space3),
+          if ((showBack || leading != null) && title != null)
+            const SizedBox(width: T.space3),
           if (title case final t?)
             Expanded(
               child: Text(
@@ -130,7 +161,9 @@ class _NeuAppBar extends StatelessWidget {
             )
           else
             const Spacer(),
-          ...?actions?.expand((w) => [const SizedBox(width: T.space2), w]).skip(1),
+          ...?actions
+              ?.expand((w) => [const SizedBox(width: T.space2), w])
+              .skip(1),
         ],
       ),
     );

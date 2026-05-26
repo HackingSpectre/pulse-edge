@@ -11,7 +11,7 @@ import 'feature_window.dart';
 
 /// On-device anomaly detector.
 ///
-/// Loads a TFLite classifier from assets/models/anomaly.tflite — if absent
+/// Loads a TFLite classifier from assets/models/anomaly.tflite - if absent
 /// (development build), falls back to a deterministic heuristic so the
 /// pipeline still produces interpretable scores. The Python training
 /// notebook in `/ml/anomaly/` produces the real model.
@@ -29,7 +29,7 @@ class AnomalyDetector {
     _initTried = true;
     try {
       File? f;
-      // Prefer a model copied from assets to app docs at first launch — keeps
+      // Prefer a model copied from assets to app docs at first launch - keeps
       // the asset bundle small while still letting users replace the model.
       final docs = await getApplicationDocumentsDirectory();
       final local = File(p.join(docs.path, _localModel));
@@ -41,14 +41,17 @@ class AnomalyDetector {
           await local.writeAsBytes(bytes.buffer.asUint8List(), flush: true);
           f = local;
         } catch (_) {
-          // Asset not bundled — fall back to heuristic.
+          // Asset not bundled - fall back to heuristic.
           log.w('No TFLite anomaly model bundled; using heuristic fallback.');
           return;
         }
       }
       _interpreter = Interpreter.fromFile(f);
       _inputShape = _interpreter!.getInputTensor(0).shape;
-      _outputLen = _interpreter!.getOutputTensor(0).shape.reduce((a, b) => a * b);
+      _outputLen = _interpreter!
+          .getOutputTensor(0)
+          .shape
+          .reduce((a, b) => a * b);
       log.i('Anomaly model loaded; input=$_inputShape output=$_outputLen');
     } catch (e, st) {
       log.e('Failed to load anomaly model', error: e, stackTrace: st);
@@ -83,7 +86,8 @@ class AnomalyDetector {
     final spo2 = w.spo2Mean ?? 98.0;
     final spo2Penalty = spo2 < 95 ? (95 - spo2) / 6 : 0.0;
     final activityPenalty = w.activity == 2 && w.hrMean > 175 ? 0.4 : 0.0;
-    final raw = 0.40 * hrPenalty +
+    final raw =
+        0.40 * hrPenalty +
         0.18 * hrvPenalty +
         0.18 * tempPenalty +
         0.16 * spo2Penalty +

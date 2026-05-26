@@ -27,6 +27,7 @@ class OnboardingFlow extends ConsumerStatefulWidget {
 
 class _OnboardingFlowState extends ConsumerState<OnboardingFlow> {
   final _pageCtrl = PageController();
+  final _profileKey = GlobalKey<StepProfileState>();
   int _index = 0;
 
   late final List<OnboardingStep> _steps = [
@@ -34,7 +35,7 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> {
     OnboardingStep(builder: (_) => const StepValueProps()),
     OnboardingStep(builder: (_) => const StepPermissions()),
     OnboardingStep(builder: (_) => const StepSetPin()),
-    OnboardingStep(builder: (_) => const StepProfile()),
+    OnboardingStep(builder: (_) => StepProfile(key: _profileKey)),
     OnboardingStep(builder: (_) => const StepPairDevice()),
     OnboardingStep(builder: (_) => const StepCalibration()),
     OnboardingStep(builder: (_) => const StepDone()),
@@ -46,27 +47,43 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> {
     super.dispose();
   }
 
-  void _next() {
+  Future<void> _next() async {
+    if (!await _canLeaveCurrentStep()) return;
     if (_index < _steps.length - 1) {
-      _pageCtrl.nextPage(
-        duration: T.motionPage,
-        curve: T.emphasized,
-      );
+      _pageCtrl.nextPage(duration: T.motionPage, curve: T.emphasized);
     } else {
       _finish();
     }
   }
 
+  Future<bool> _canLeaveCurrentStep() async {
+    if (_index == 3) {
+      final hasPin = await ref.read(authServiceProvider).hasPin();
+      if (!hasPin) {
+        _showMessage('Set and confirm your PIN before continuing.');
+        return false;
+      }
+    }
+    if (_index == 4) {
+      await _profileKey.currentState?.save();
+    }
+    return true;
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
   void _back() {
     if (_index == 0) return;
-    _pageCtrl.previousPage(
-      duration: T.motionPage,
-      curve: T.emphasized,
-    );
+    _pageCtrl.previousPage(duration: T.motionPage, curve: T.emphasized);
   }
 
   Future<void> _finish() async {
     await ref.read(settingsProvider).setOnboardingComplete(true);
+    ref.invalidate(routerProvider);
     ref.read(isLockedProvider.notifier).unlock();
     if (!mounted) return;
     context.go(Routes.dashboard);
@@ -82,47 +99,49 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> {
       },
       child: Scaffold(
         backgroundColor: T.surface,
-        body: SafeArea(
-          child: Column(
-            children: [
-              _Header(
-                index: _index,
-                total: _steps.length,
-                onBack: _index == 0 ? null : _back,
-              ),
-              Expanded(
-                child: PageView.builder(
-                  controller: _pageCtrl,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: _steps.length,
-                  onPageChanged: (i) => setState(() => _index = i),
-                  itemBuilder: (context, i) => Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      T.pagePadding,
-                      T.space2,
-                      T.pagePadding,
-                      0,
+        body: NeuChassisBackground(
+          child: SafeArea(
+            child: Column(
+              children: [
+                _Header(
+                  index: _index,
+                  total: _steps.length,
+                  onBack: _index == 0 ? null : _back,
+                ),
+                Expanded(
+                  child: PageView.builder(
+                    controller: _pageCtrl,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: _steps.length,
+                    onPageChanged: (i) => setState(() => _index = i),
+                    itemBuilder: (context, i) => Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        T.pagePadding,
+                        T.space2,
+                        T.pagePadding,
+                        0,
+                      ),
+                      child: _steps[i].builder(context),
                     ),
-                    child: _steps[i].builder(context),
                   ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  T.pagePadding,
-                  T.space4,
-                  T.pagePadding,
-                  T.space5,
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    T.pagePadding,
+                    T.space4,
+                    T.pagePadding,
+                    T.space5,
+                  ),
+                  child: NeuButton(
+                    label: isLast ? 'Start' : 'Continue',
+                    variant: NeuButtonVariant.filled,
+                    expanded: true,
+                    size: NeuSize.lg,
+                    onPressed: _next,
+                  ),
                 ),
-                child: NeuButton(
-                  label: isLast ? 'Start' : 'Continue',
-                  variant: NeuButtonVariant.filled,
-                  expanded: true,
-                  size: NeuSize.lg,
-                  onPressed: _next,
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -144,7 +163,12 @@ class _Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(T.space4, T.space4, T.space4, T.space2),
+      padding: const EdgeInsets.fromLTRB(
+        T.space4,
+        T.space4,
+        T.space4,
+        T.space2,
+      ),
       child: Row(
         children: [
           NeuIconButton(
@@ -153,9 +177,7 @@ class _Header extends StatelessWidget {
             tooltip: 'Back',
           ),
           const SizedBox(width: T.space4),
-          Expanded(
-            child: NeuLinearProgress(value: (index + 1) / total),
-          ),
+          Expanded(child: NeuLinearProgress(value: (index + 1) / total)),
           const SizedBox(width: T.space4),
           Text(
             '${index + 1}/$total',

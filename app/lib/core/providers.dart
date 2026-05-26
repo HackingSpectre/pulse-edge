@@ -111,6 +111,7 @@ final modelDownloadProvider = Provider<ModelDownloadManager>(
 
 final llmServiceProvider = Provider<LlmService>(
   (ref) => LlmService(
+    ble: ref.watch(bleServiceProvider),
     sensorRepo: ref.watch(sensorRepoProvider),
     anomalyRepo: ref.watch(anomalyRepoProvider),
     profileRepo: ref.watch(profileRepoProvider),

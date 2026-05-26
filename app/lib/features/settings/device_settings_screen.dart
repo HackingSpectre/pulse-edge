@@ -87,14 +87,14 @@ class _DeviceSettingsScreenState extends ConsumerState<DeviceSettingsScreen> {
       await repo.forget();
       if (!mounted) return;
       setState(_results.clear);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Device forgotten.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Device forgotten.')));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Forget failed: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Forget failed: $e')));
     }
   }
 
@@ -202,7 +202,7 @@ class _DeviceSettingsScreenState extends ConsumerState<DeviceSettingsScreen> {
                   Text(
                     _scanning
                         ? 'Looking for PulseEdge nearby…'
-                        : 'No devices found yet — tap Scan to try again.',
+                        : 'No devices found yet - tap Scan to try again.',
                     style: T.caption,
                     textAlign: TextAlign.center,
                   ),
@@ -215,15 +215,15 @@ class _DeviceSettingsScreenState extends ConsumerState<DeviceSettingsScreen> {
                 final name = r.advertisementData.advName.isNotEmpty
                     ? r.advertisementData.advName
                     : (r.device.platformName.isEmpty
-                        ? 'Pulse Edge'
-                        : r.device.platformName);
+                          ? 'Pulse Edge'
+                          : r.device.platformName);
                 return Padding(
                   padding: const EdgeInsets.only(bottom: T.space3),
                   child: NeuCard(
                     onTap: () => _connect(r),
                     child: Row(
                       children: [
-                        const Icon(Icons.bluetooth_rounded, color: T.primary),
+                        Icon(Icons.bluetooth_rounded, color: T.primary),
                         const SizedBox(width: T.space4),
                         Expanded(
                           child: Column(
