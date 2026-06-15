@@ -43,34 +43,22 @@ class AboutScreen extends StatelessWidget {
           NeuListGroup(
             children: [
               NeuListTile(
-                icon: Icons.code_rounded,
-                title: 'Source code',
-                subtitle: 'Final-year project. See the project README',
-              ),
-              NeuListTile(
-                icon: Icons.dataset_rounded,
-                title: 'Trained on WESAD',
-                subtitle: 'Schmidt et al., 2018 public dataset',
+                icon: Icons.monitor_heart_rounded,
+                title: 'Wearable monitoring',
+                subtitle:
+                    'Tracks readings, trends, alerts, and health summaries.',
               ),
               NeuListTile(
                 icon: Icons.psychology_rounded,
-                title: 'Assistant',
-                subtitle: 'Offline edge model support',
+                title: 'Private guidance',
+                subtitle:
+                    'Explains readings on your phone using recent health data.',
               ),
               NeuListTile(
-                icon: Icons.style_rounded,
-                title: 'Design language',
-                subtitle: 'Neumorphism Club design system',
-              ),
-              NeuListTile(
-                icon: Icons.gavel_rounded,
-                title: 'Open-source licenses',
-                subtitle: 'View the third-party software used',
-                onTap: () => showLicensePage(
-                  context: context,
-                  applicationName: 'Pulse Edge',
-                  applicationVersion: '0.1.0',
-                ),
+                icon: Icons.shield_rounded,
+                title: 'Privacy first',
+                subtitle:
+                    'Your readings stay on this phone unless you share them.',
               ),
             ],
           ),

@@ -17,7 +17,6 @@ class StepPairDevice extends ConsumerStatefulWidget {
 class _StepPairDeviceState extends ConsumerState<StepPairDevice> {
   final _results = <ScanResult>[];
   bool _scanning = false;
-  bool _demoStarted = false;
 
   Future<void> _scan() async {
     final ble = ref.read(bleServiceProvider);
@@ -34,12 +33,13 @@ class _StepPairDeviceState extends ConsumerState<StepPairDevice> {
             ..addAll(r);
         });
       }
-    } catch (e) {
-      // Surface scan failures via SnackBar so the demo flow still works.
+    } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Scan failed: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not scan. Check Bluetooth and try again.'),
+        ),
+      );
     }
     if (mounted) setState(() => _scanning = false);
   }
@@ -47,17 +47,14 @@ class _StepPairDeviceState extends ConsumerState<StepPairDevice> {
   Future<void> _connect(ScanResult r) async {
     try {
       await ref.read(bleServiceProvider).connect(r.device);
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Connection failed: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not connect. Move closer and try again.'),
+        ),
+      );
     }
-  }
-
-  Future<void> _useDemo() async {
-    await ref.read(bleServiceProvider).startDemo();
-    setState(() => _demoStarted = true);
   }
 
   @override
@@ -71,32 +68,17 @@ class _StepPairDeviceState extends ConsumerState<StepPairDevice> {
           Text('Pair your wearable', style: T.h1),
           const SizedBox(height: T.space2),
           Text(
-            "Power on the Pulse Edge wearable and tap Scan. No wearable yet? "
-            'Use the built-in demo source to explore the app with synthetic '
-            'data.',
+            'Power on the Pulse Edge wearable, keep it close to your phone, '
+            'then tap Scan.',
             style: T.bodySoft,
           ),
           const SizedBox(height: T.space6),
-          Row(
-            children: [
-              Expanded(
-                child: NeuButton(
-                  label: _scanning ? 'Scanning…' : 'Scan',
-                  icon: Icons.bluetooth_searching_rounded,
-                  loading: _scanning,
-                  onPressed: _scanning ? null : _scan,
-                ),
-              ),
-              const SizedBox(width: T.space3),
-              Expanded(
-                child: NeuButton(
-                  label: _demoStarted ? 'Demo on' : 'Use demo',
-                  icon: Icons.science_rounded,
-                  variant: NeuButtonVariant.subtle,
-                  onPressed: _useDemo,
-                ),
-              ),
-            ],
+          NeuButton(
+            label: _scanning ? 'Scanning…' : 'Scan for wearable',
+            icon: Icons.bluetooth_searching_rounded,
+            loading: _scanning,
+            expanded: true,
+            onPressed: _scanning ? null : _scan,
           ),
           const SizedBox(height: T.space5),
           StreamBuilder<BleStatus>(
@@ -113,8 +95,7 @@ class _StepPairDeviceState extends ConsumerState<StepPairDevice> {
                       const SizedBox(width: T.space3),
                       Expanded(
                         child: Text(
-                          'Connected to ${status.deviceName ?? 'wearable'}'
-                          '${status.demo ? ' (demo)' : ''}',
+                          'Connected to ${status.deviceName ?? 'wearable'}',
                           style: T.bodyStrong,
                         ),
                       ),
@@ -163,11 +144,11 @@ class _StepPairDeviceState extends ConsumerState<StepPairDevice> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(name, style: T.bodyStrong),
-                                Text(r.device.remoteId.str, style: T.caption),
+                                Text('Tap to connect', style: T.caption),
                               ],
                             ),
                           ),
-                          Text('${r.rssi} dBm', style: T.caption),
+                          Text(_signalLabel(r.rssi), style: T.caption),
                         ],
                       ),
                     ),
@@ -180,5 +161,11 @@ class _StepPairDeviceState extends ConsumerState<StepPairDevice> {
         ],
       ),
     );
+  }
+
+  String _signalLabel(int rssi) {
+    if (rssi >= -60) return 'Strong';
+    if (rssi >= -75) return 'Good';
+    return 'Weak';
   }
 }

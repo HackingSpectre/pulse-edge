@@ -29,9 +29,8 @@ class StepDone extends StatelessWidget {
             Text("You're set", style: T.display2, textAlign: TextAlign.center),
             const SizedBox(height: T.space3),
             Text(
-              'The dashboard shows live readings. The Chat tab is your AI '
-              'assistant. Download the offline edge model from Settings for '
-              'richer local answers.',
+              'The dashboard shows live readings. The Chat tab can explain '
+              'your health trends and alerts privately on this phone.',
               style: T.bodySoft,
               textAlign: TextAlign.center,
             ),

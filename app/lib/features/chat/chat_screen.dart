@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/router.dart';
-import '../../core/llm/llm_service.dart';
 import '../../core/providers.dart';
 import '../../core/theme/tokens.dart';
 import '../../shared/widgets/widgets.dart';
@@ -18,23 +17,28 @@ class ChatScreen extends ConsumerStatefulWidget {
 }
 
 class _ChatScreenState extends ConsumerState<ChatScreen> {
+  static const _thinkingDelay = Duration(milliseconds: 750);
+  static const _typingDelay = Duration(milliseconds: 22);
+  static const _typingStep = 4;
+
   final _input = TextEditingController();
   final _scroll = ScrollController();
   final _messages = <_Msg>[
     _Msg(
       role: _Role.assistant,
       text:
-          'Hi. I am your on-device assistant. Ask me about your wearable '
-          'data, or pick a suggestion below.',
+          'Hi. I can help explain your wearable readings, alerts, and '
+          'today\'s health trends.',
     ),
   ];
   bool _busy = false;
   StreamSubscription<String>? _stream;
+  int _replyToken = 0;
 
   @override
   void initState() {
     super.initState();
-    // Start loading the model in the background. This will not block UI.
+    // Initializes the lightweight local assistant state.
     Future.microtask(() => ref.read(llmServiceProvider).ensureLoaded());
   }
 
@@ -42,6 +46,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   void dispose() {
     _input.dispose();
     _scroll.dispose();
+    _replyToken++;
     _stream?.cancel();
     super.dispose();
   }
@@ -62,49 +67,72 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final text = (presetText ?? _input.text).trim();
     if (text.isEmpty || _busy) return;
     _input.clear();
+    final token = ++_replyToken;
     setState(() {
       _messages.add(_Msg(role: _Role.user, text: text));
-      _messages.add(_Msg(role: _Role.assistant, text: '', streaming: true));
+      _messages.add(
+        _Msg(role: _Role.assistant, text: '', phase: _MsgPhase.thinking),
+      );
       _busy = true;
     });
     _scrollToBottom();
 
     final llm = ref.read(llmServiceProvider);
-    final buf = StringBuffer();
-    _stream = llm
-        .chat(text)
-        .listen(
-          (chunk) {
-            buf.write(chunk);
-            setState(() {
-              _messages.last = _Msg(
-                role: _Role.assistant,
-                text: buf.toString(),
-                streaming: true,
-              );
-            });
-            _scrollToBottom();
-          },
-          onDone: () {
-            setState(() {
-              _messages.last = _Msg(
-                role: _Role.assistant,
-                text: buf.toString(),
-              );
-              _busy = false;
-            });
-            _scrollToBottom();
-          },
-          onError: (Object e) {
-            setState(() {
-              _messages.last = _Msg(
-                role: _Role.assistant,
-                text: 'Sorry, something went wrong: $e',
-              );
-              _busy = false;
-            });
-          },
+    final responseFuture = _collectReply(llm.chat(text));
+
+    try {
+      await Future.delayed(_thinkingDelay);
+      final reply = await responseFuture;
+      if (!mounted || token != _replyToken) return;
+      await _revealReply(reply, token);
+    } catch (_) {
+      if (!mounted || token != _replyToken) return;
+      setState(() {
+        _messages.last = _Msg(
+          role: _Role.assistant,
+          text: 'Sorry, I could not answer that right now.',
         );
+        _busy = false;
+      });
+      _scrollToBottom();
+    }
+  }
+
+  Future<String> _collectReply(Stream<String> stream) {
+    final completer = Completer<String>();
+    final buf = StringBuffer();
+    _stream?.cancel();
+    _stream = stream.listen(
+      buf.write,
+      onDone: () => completer.complete(buf.toString()),
+      onError: completer.completeError,
+      cancelOnError: true,
+    );
+    return completer.future;
+  }
+
+  Future<void> _revealReply(String reply, int token) async {
+    final text = reply.trim().isEmpty
+        ? 'I do not have enough information to answer that yet.'
+        : reply;
+    for (var end = _typingStep; end < text.length; end += _typingStep) {
+      if (!mounted || token != _replyToken) return;
+      setState(() {
+        _messages.last = _Msg(
+          role: _Role.assistant,
+          text: text.substring(0, end),
+          phase: _MsgPhase.typing,
+        );
+      });
+      _scrollToBottom();
+      await Future.delayed(_typingDelay);
+    }
+    if (!mounted || token != _replyToken) return;
+    setState(() {
+      _messages.last = _Msg(role: _Role.assistant, text: text);
+      _busy = false;
+    });
+    _scrollToBottom();
   }
 
   @override
@@ -114,7 +142,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       actions: [
         NeuIconButton(
           icon: Icons.tune_rounded,
-          tooltip: 'Model',
+          tooltip: 'Health guidance',
           onPressed: () => context.go(Routes.settingsModel),
         ),
       ],
@@ -145,11 +173,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
 enum _Role { user, assistant }
 
+enum _MsgPhase { idle, thinking, typing }
+
 class _Msg {
-  _Msg({required this.role, required this.text, this.streaming = false});
+  _Msg({required this.role, required this.text, this.phase = _MsgPhase.idle});
   final _Role role;
   final String text;
-  final bool streaming;
+  final _MsgPhase phase;
 }
 
 class _StatusBanner extends ConsumerWidget {
@@ -157,58 +187,7 @@ class _StatusBanner extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final llm = ref.watch(llmServiceProvider);
-    return StreamBuilder<LlmStatus>(
-      stream: llm.status$,
-      initialData: llm.status,
-      builder: (context, snap) {
-        final s = snap.data!;
-        if (s == LlmStatus.ready) return const SizedBox.shrink();
-        final color = switch (s) {
-          LlmStatus.loadingModel => T.warning,
-          LlmStatus.missingModel => T.info,
-          LlmStatus.failed => T.danger,
-          _ => T.inkMuted,
-        };
-        final label = switch (s) {
-          LlmStatus.loadingModel => 'Warming up the assistant…',
-          LlmStatus.missingModel =>
-            'Rule-based assistant active. Download the offline edge model for richer chat.',
-          LlmStatus.failed =>
-            'Assistant failed to load. Tap settings to retry.',
-          _ => '',
-        };
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(
-            T.pagePadding,
-            T.space3,
-            T.pagePadding,
-            0,
-          ),
-          child: NeuCard(
-            color: color.withValues(alpha: 0.10),
-            padding: const EdgeInsets.all(T.space3),
-            child: Row(
-              children: [
-                Icon(Icons.info_rounded, size: T.iconSm, color: color),
-                const SizedBox(width: T.space2),
-                Expanded(
-                  child: Text(label, style: T.caption.copyWith(color: color)),
-                ),
-                if (s == LlmStatus.missingModel)
-                  GestureDetector(
-                    onTap: () => context.go(Routes.settingsModel),
-                    child: Text(
-                      'INSTALL',
-                      style: T.label.copyWith(color: color),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
+    return const SizedBox.shrink();
   }
 }
 
@@ -242,15 +221,85 @@ class _Bubble extends StatelessWidget {
               horizontal: T.space4,
               vertical: T.space3,
             ),
-            child: Text(
-              msg.text + (msg.streaming ? ' ▍' : ''),
-              style: T.body.copyWith(
-                color: isUser ? T.inkInverse : T.ink,
-                height: 1.45,
-              ),
+            child: AnimatedSwitcher(
+              duration: T.motionFast,
+              switchInCurve: T.emphasized,
+              switchOutCurve: Curves.easeOut,
+              child: msg.phase == _MsgPhase.thinking
+                  ? const _ThinkingDots()
+                  : Text(
+                      msg.text + (msg.phase == _MsgPhase.typing ? ' ▍' : ''),
+                      key: ValueKey(msg.text.isEmpty ? 'empty' : 'reply'),
+                      style: T.body.copyWith(
+                        color: isUser ? T.inkInverse : T.ink,
+                        height: 1.45,
+                      ),
+                    ),
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _ThinkingDots extends StatefulWidget {
+  const _ThinkingDots();
+
+  @override
+  State<_ThinkingDots> createState() => _ThinkingDotsState();
+}
+
+class _ThinkingDotsState extends State<_ThinkingDots>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: T.motionSlow)
+      ..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (var i = 0; i < 3; i++) ...[
+              _Dot(active: ((_controller.value * 3).floor() % 3) == i),
+              if (i != 2) const SizedBox(width: 5),
+            ],
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _Dot extends StatelessWidget {
+  const _Dot({required this.active});
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: T.motionFast,
+      curve: T.emphasized,
+      width: active ? 8 : 6,
+      height: active ? 8 : 6,
+      decoration: BoxDecoration(
+        color: active ? T.primary : T.inkMuted.withValues(alpha: 0.45),
+        shape: BoxShape.circle,
       ),
     );
   }

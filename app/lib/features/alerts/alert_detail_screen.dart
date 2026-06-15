@@ -100,14 +100,14 @@ class _AlertDetailScreenState extends ConsumerState<AlertDetailScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Snapshot'.toUpperCase(), style: T.label),
+                    Text('Readings at the time'.toUpperCase(), style: T.label),
                     const SizedBox(height: T.space3),
                     for (final entry in metrics.entries)
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 4),
                         child: Row(
                           children: [
-                            Text(entry.key, style: T.caption),
+                            Text(_metricLabel(entry.key), style: T.caption),
                             const Spacer(),
                             Text(
                               entry.value == null
@@ -177,7 +177,7 @@ class _AlertDetailScreenState extends ConsumerState<AlertDetailScreen> {
                 children: [
                   Expanded(
                     child: NeuButton(
-                      label: 'Mark not anomalous',
+                      label: 'Mark as not an issue',
                       icon: Icons.thumb_up_off_alt_rounded,
                       variant: NeuButtonVariant.subtle,
                       onPressed: row.markedNotAnomalous
@@ -214,5 +214,22 @@ class _AlertDetailScreenState extends ConsumerState<AlertDetailScreen> {
         },
       ),
     );
+  }
+
+  String _metricLabel(String key) {
+    return switch (key) {
+      'hrMean' => 'Heart rate average',
+      'hrMin' => 'Heart rate low',
+      'hrMax' => 'Heart rate high',
+      'hrStd' => 'Heart rate change',
+      'rmssd' => 'Heart rhythm variation',
+      'spo2' || 'spo2Mean' => 'Blood oxygen',
+      'tempMean' => 'Skin temperature',
+      'activity' => 'Activity',
+      'accelMean' => 'Movement',
+      'accelStd' => 'Movement change',
+      'modelP' || 'anomalyP' => 'Pattern score',
+      _ => key,
+    };
   }
 }

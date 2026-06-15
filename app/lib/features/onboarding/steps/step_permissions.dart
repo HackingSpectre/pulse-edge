@@ -111,7 +111,8 @@ class _StepPermissionsState extends State<StepPermissions> {
                 Expanded(
                   child: Text(
                     'No internet, microphone, or camera permissions are required. '
-                    'Android 11 and below need location access for BLE scans.',
+                    'Some Android phones may also ask for location permission '
+                    'so nearby wearables can be found.',
                     style: T.caption.copyWith(color: T.primary),
                   ),
                 ),

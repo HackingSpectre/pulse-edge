@@ -1,161 +1,56 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:math' as math;
 
-import 'package:flutter_gemma/flutter_gemma.dart';
 import 'package:rxdart/rxdart.dart';
 
 import '../ble/ble_service.dart';
 import '../db/repositories.dart';
-import '../utils/logger.dart';
-import 'model_download_manager.dart';
-import 'prompt_templates.dart';
 import 'scripted_assistant.dart';
 
-enum LlmStatus { uninitialized, loadingModel, ready, missingModel, failed }
+enum LlmStatus { ready }
 
+/// Lightweight local assistant service.
+///
+/// Despite the historical name, this no longer loads a language model. The
+/// assistant is intentionally deterministic: every answer is grounded in recent
+/// wearable readings, hard safety thresholds, and conservative wellness rules.
 class LlmService {
   LlmService({
     required this.ble,
     required this.sensorRepo,
     required this.anomalyRepo,
     required this.profileRepo,
-    required this.download,
   });
 
   final BleService ble;
   final SensorRepo sensorRepo;
   final AnomalyRepo anomalyRepo;
   final ProfileRepo profileRepo;
-  final ModelDownloadManager download;
 
-  final _status = BehaviorSubject<LlmStatus>.seeded(LlmStatus.uninitialized);
+  final _status = BehaviorSubject<LlmStatus>.seeded(LlmStatus.ready);
   Stream<LlmStatus> get status$ => _status.stream;
   LlmStatus get status => _status.value;
 
-  InferenceModel? _model;
-  InferenceChat? _chat;
+  Future<void> ensureLoaded() async {}
 
-  /// Try to load the local model. Safe to call repeatedly, only initialises
-  /// once. If no model is on disk, status becomes [LlmStatus.missingModel].
-  Future<void> ensureLoaded() async {
-    if (_status.value == LlmStatus.ready ||
-        _status.value == LlmStatus.loadingModel) {
-      return;
-    }
-    final installed = await download.isInstalled();
-    if (!installed) {
-      _status.add(LlmStatus.missingModel);
-      return;
-    }
-    _status.add(LlmStatus.loadingModel);
-    try {
-      final f = await download.localFile;
-      await FlutterGemma.installModel(
-        modelType: ModelType.gemmaIt,
-      ).fromFile(f.path).install();
-      _model = await FlutterGemmaPlugin.instance.createModel(
-        modelType: ModelType.gemmaIt,
-        maxTokens: 1024,
-        preferredBackend: PreferredBackend.cpu,
-      );
-      _chat = await _model!.createChat(
-        temperature: 0.7,
-        topK: 40,
-        randomSeed: 42,
-      );
-      _status.add(LlmStatus.ready);
-    } catch (e, st) {
-      log.e('LLM load failed', error: e, stackTrace: st);
-      _status.add(LlmStatus.failed);
-    }
-  }
-
-  /// Free chat. Every turn is grounded in the current live wearable snapshot.
   Stream<String> chat(String userMessage) async* {
-    await ensureLoaded();
     final context = await _recentContext();
-    if (_status.value != LlmStatus.ready) {
-      yield ScriptedAssistant.reply(userMessage, context: context);
-      yield Prompts.disclaimer;
-      return;
-    }
-    try {
-      final prompt = Prompts.chatTurn(
-        userMessage: userMessage,
-        healthContext: context.toPromptContext(),
-        profileName: context.profileName,
-      );
-      await _chat!.addQueryChunk(Message.text(text: prompt, isUser: true));
-      // Stream tokens as they arrive. Only TextResponse carries token text.
-      await for (final r in _chat!.generateChatResponseAsync()) {
-        if (r case TextResponse(:final token)) {
-          yield token;
-        }
-      }
-      yield Prompts.disclaimer;
-    } catch (e) {
-      log.e('chat failed', error: e);
-      yield 'Sorry - I hit an error. Please try again.';
-      yield Prompts.disclaimer;
-    }
+    yield ScriptedAssistant.reply(userMessage, context: context);
+    yield ScriptedAssistant.disclaimer;
   }
 
-  /// One-shot anomaly explanation. Returns the full text, never streams.
   Future<String> explainAnomaly({
     required String type,
     required String metricsJson,
   }) async {
-    await ensureLoaded();
-    if (_status.value != LlmStatus.ready) {
-      return '${_scriptedExplain(type, metricsJson)}${Prompts.disclaimer}';
-    }
-    try {
-      final session = await _model!.createSession();
-      try {
-        await session.addQueryChunk(
-          Message.text(
-            text: Prompts.explainAnomaly(type: type, metricsJson: metricsJson),
-            isUser: true,
-          ),
-        );
-        final response = await session.getResponse();
-        return '$response${Prompts.disclaimer}';
-      } finally {
-        await session.close();
-      }
-    } catch (e) {
-      log.e('explain failed', error: e);
-      return '${_scriptedExplain(type, metricsJson)}${Prompts.disclaimer}';
-    }
+    return '${ScriptedAssistant.explainAnomaly(type: type, metricsJson: metricsJson)}'
+        '${ScriptedAssistant.disclaimer}';
   }
 
   Future<String> dailySummary() async {
     final context = await _recentContext();
-    final summary = context.shortSummary;
-    final json = jsonEncode({'summary': summary});
-    await ensureLoaded();
-    if (_status.value != LlmStatus.ready) {
-      return 'Today: $summary${Prompts.disclaimer}';
-    }
-    try {
-      final session = await _model!.createSession();
-      try {
-        await session.addQueryChunk(
-          Message.text(
-            text: Prompts.dailySummary(metricsJson: json),
-            isUser: true,
-          ),
-        );
-        final response = await session.getResponse();
-        return '$response${Prompts.disclaimer}';
-      } finally {
-        await session.close();
-      }
-    } catch (e) {
-      log.e('summary failed', error: e);
-      return 'Today: $summary${Prompts.disclaimer}';
-    }
+    return '${ScriptedAssistant.dailySummary(context)}'
+        '${ScriptedAssistant.disclaimer}';
   }
 
   Future<HealthChatContext> _recentContext() async {
@@ -179,10 +74,9 @@ class LlmService {
     final motion = imu
         .map((s) {
           final mag = (s.ax * s.ax + s.ay * s.ay + s.az * s.az);
-          return mag <= 0 ? null : mag;
+          return mag <= 0 ? null : math.sqrt(mag) / 9.80665;
         })
         .whereType<double>()
-        .map((v) => math.sqrt(v) / 9.80665)
         .where((v) => v.isFinite)
         .toList();
 
@@ -211,18 +105,11 @@ class LlmService {
       motionMean: ScriptedAssistant.mean(motion),
       recentHighAlerts: anomalies.where((a) => a.severity == 2).length,
       recentMediumAlerts: anomalies.where((a) => a.severity == 1).length,
+      recentLowAlerts: anomalies.where((a) => a.severity == 0).length,
     );
   }
 
-  String _scriptedExplain(String type, String metricsJson) {
-    return 'Pulse Edge spotted a $type pattern (${metricsJson.length > 80 ? "${metricsJson.substring(0, 80)}..." : metricsJson}). '
-        'Sit, breathe slowly, and check again in a few minutes. If it persists, '
-        'contact your doctor.';
-  }
-
   Future<void> dispose() async {
-    await _chat?.session.close();
-    await _model?.close();
     await _status.close();
   }
 }

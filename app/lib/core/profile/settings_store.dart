@@ -1,7 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Persistent app-level flags. Profile-level data lives in drift; this is
-/// for non-PII app preferences only (onboarding completed, demo mode, etc.).
+/// for non-PII app preferences only.
 class SettingsStore {
   SettingsStore(this._prefs);
   final SharedPreferences _prefs;
@@ -15,7 +15,7 @@ class SettingsStore {
   Future<void> setOnboardingComplete(bool v) =>
       _prefs.setBool(_kOnboardingComplete, v);
 
-  bool get demoMode => _prefs.getBool(_kDemoMode) ?? true;
+  bool get demoMode => _prefs.getBool(_kDemoMode) ?? false;
   Future<void> setDemoMode(bool v) => _prefs.setBool(_kDemoMode, v);
 
   int get autoLockMinutes => _prefs.getInt(_kAutoLockMinutes) ?? 2;

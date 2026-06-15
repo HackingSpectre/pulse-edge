@@ -38,11 +38,13 @@ class _DeviceSettingsScreenState extends ConsumerState<DeviceSettingsScreen> {
             ..addAll(r);
         });
       }
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Scan failed: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not scan. Check Bluetooth and try again.'),
+        ),
+      );
     }
     if (mounted) setState(() => _scanning = false);
   }
@@ -50,11 +52,13 @@ class _DeviceSettingsScreenState extends ConsumerState<DeviceSettingsScreen> {
   Future<void> _connect(ScanResult r) async {
     try {
       await ref.read(bleServiceProvider).connect(r.device);
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Connection failed: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not connect. Move closer and try again.'),
+        ),
+      );
     }
   }
 
@@ -90,11 +94,13 @@ class _DeviceSettingsScreenState extends ConsumerState<DeviceSettingsScreen> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Device forgotten.')));
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Forget failed: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not forget this device right now.'),
+        ),
+      );
     }
   }
 
@@ -142,38 +148,24 @@ class _DeviceSettingsScreenState extends ConsumerState<DeviceSettingsScreen> {
                     if (s.batteryPct != null)
                       _kv('Battery', '${s.batteryPct}%'),
                     if (s.sensorOk != null)
-                      _kv('Sensors', s.sensorOk! ? 'OK' : 'Check wiring'),
+                      _kv('Sensors', s.sensorOk! ? 'OK' : 'Check wearable'),
                     if (s.contactOk != null)
                       _kv(
                         'Wrist contact',
                         s.contactOk! ? 'Good' : 'Adjust fit',
                       ),
-                    if (s.demo) _kv('Mode', 'Demo / synthetic data'),
                   ],
                 ),
               );
             },
           ),
           const SizedBox(height: T.space4),
-          Row(
-            children: [
-              Expanded(
-                child: NeuButton(
-                  label: 'Restart demo',
-                  icon: Icons.refresh_rounded,
-                  onPressed: () => ble.startDemo(),
-                ),
-              ),
-              const SizedBox(width: T.space3),
-              Expanded(
-                child: NeuButton(
-                  label: 'Disconnect',
-                  icon: Icons.bluetooth_disabled_rounded,
-                  variant: NeuButtonVariant.subtle,
-                  onPressed: () => ble.stop(),
-                ),
-              ),
-            ],
+          NeuButton(
+            label: 'Disconnect',
+            icon: Icons.bluetooth_disabled_rounded,
+            variant: NeuButtonVariant.subtle,
+            expanded: true,
+            onPressed: () => ble.stop(),
           ),
           const SizedBox(height: T.space4),
           Row(
@@ -230,11 +222,11 @@ class _DeviceSettingsScreenState extends ConsumerState<DeviceSettingsScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(name, style: T.bodyStrong),
-                              Text(r.device.remoteId.str, style: T.caption),
+                              Text('Tap to connect', style: T.caption),
                             ],
                           ),
                         ),
-                        Text('${r.rssi} dBm', style: T.caption),
+                        Text(_signalLabel(r.rssi), style: T.caption),
                       ],
                     ),
                   ),
@@ -274,7 +266,6 @@ class _DeviceSettingsScreenState extends ConsumerState<DeviceSettingsScreen> {
                     Text('Remembered device'.toUpperCase(), style: T.label),
                     const SizedBox(height: T.space3),
                     _kv('Name', d.name),
-                    _kv('Hardware ID', d.hardwareId),
                     _kv('Paired', paired),
                     const SizedBox(height: T.space4),
                     NeuButton(
@@ -303,4 +294,10 @@ class _DeviceSettingsScreenState extends ConsumerState<DeviceSettingsScreen> {
       ],
     ),
   );
+
+  String _signalLabel(int rssi) {
+    if (rssi >= -60) return 'Strong';
+    if (rssi >= -75) return 'Good';
+    return 'Weak';
+  }
 }

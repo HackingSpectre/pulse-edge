@@ -29,8 +29,7 @@ class AlertsScreen extends ConsumerWidget {
               title: 'All quiet',
               message:
                   'When something looks unusual, it shows up here. The first '
-                  'week of data feeds the personalized baseline before the '
-                  'pattern detector kicks in.',
+                  'week of readings helps Pulse Edge learn your usual range.',
               tone: T.success,
             );
           }

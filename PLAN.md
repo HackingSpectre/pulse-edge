@@ -201,42 +201,7 @@ Supplement with **PPG-DaLiA** (PPG+IMU during daily activities, 15 subjects) for
   - HR: mean, std, min, max, RMSSD (HRV), pNN50
   - SpO₂: mean, min
   - Temp: mean, slope
-  - IMU: mean magnitude, std magnitude, activity class (sedentary/walking/running)
-- Model: small **1D-CNN or MLP** (~50–200 KB after int8 quantization). Train as a binary classifier (normal/anomaly) using stress + amusement vs baseline labels in WESAD as proxy.
-- Export: TF/Keras → `TFLiteConverter` with `Optimize.DEFAULT` → int8 quantized.
-
-**Layer 2 — Per-user statistical baseline (pure Dart on phone):**
-- Welford's online algorithm for per-metric running mean/std, segmented by **time-of-day** (morning/afternoon/evening/night) and **activity** (rest/active).
-- After 7 days of data, flag readings as anomalous if `|x - μ| > 3σ` for the matching segment.
-
-**Layer 3 — Decision logic (Alert engine):**
-```
-if model_anomaly AND baseline_anomaly  → HIGH severity   → notify + LLM explanation
-if model_anomaly XOR baseline_anomaly  → MEDIUM          → log + LLM explanation, no push
-if neither                              → log only
-```
-Plus hardcoded **safety rules** that bypass both layers and always alert HIGH:
-- HR > 180 sustained 30s, or HR < 35 sustained 30s
-- SpO₂ < 90% sustained 30s
-- Skin temp > 39.5°C or < 34°C (with sanity check vs ambient)
-- Free-fall detected by IMU (potential collapse)
-
-### 6.3 Training rig
-- **Notebook:** Colab (T4) or your local GPU. Repo subfolder `ml/training/`.
-- **Outputs to commit:** `anomaly_v1.tflite`, `feature_spec.json`, `eval_report.md`, training notebook with fixed seeds.
-- Reproducibility matters for the dissertation — pin all package versions.
-
----
-
-## 7. On-Device LLM — Decision Support
-
-### 7.1 Model choice: **Gemma 3 1B Q4_K_M** (default) or **Llama 3.2 3B Q4_K_M** (if target phone has ≥8 GB RAM)
-
-| Model | Disk | Speed (SD7-class) | Pick when |
-|---|---|---|---|
-| Gemma 3 1B | ~0.55 GB | 20–30 tok/s | Default. Safe for 6 GB RAM phones. |
-| Llama 3.2 3B | ~2.0 GB | 8–15 tok/s | Better quality for triage; needs 8 GB+ |
-
+  - IMU: mean magnitude, std magnitude, activity class (sedentary/walkinThese overlapping issues highlight the need for a wearable system that can perform real-time, personalized health analysis directly on the user's smartphone. This project addresses these gaps by building a privacy-focused, offline-first system using mobile edge computing.
 **Distribution:** Do **not** bundle the model in the APK (Play Store size limits + ~1 GB asset). Download on first launch with a progress UI. Resume on partial download. Verify SHA-256.
 
 ### 7.2 Runtime: `flutter_gemma`
@@ -251,7 +216,7 @@ Plus hardcoded **safety rules** that bypass both layers and always alert HIGH:
 - **Pipeline:** train LoRA → merge → export GGUF (`llama.cpp/convert_hf_to_gguf.py`) → quantize Q4_K_M → ship via fllama. (Or convert to MediaPipe `.task` via `ai-edge-torch` for flutter_gemma — version-finicky, budget 1 day.)
 - **Repo subfolder:** `ml/llm-finetune/` — notebook, datasets manifest, training config, eval prompts.
 
-### 7.4 RAG over the user's own data (no external retrieval)
+### 7.4 RAG over the user's own data (no external retrieval)These overlapping issues highlight the need for a wearable system that can perform real-time, personalized health analysis directly on the user's smartphone. This project addresses these gaps by building a privacy-focused, offline-first system using mobile edge computing.
 For Q&A and summaries the LLM needs the user's recent metrics as context. Build a tiny **structured retriever**:
 - Query intent classifier (regex/keyword first, LLM fallback): "trend", "last alert", "today", "compare days".
 - Pull the matching aggregates from drift, render as a short markdown block, prepend to the prompt.

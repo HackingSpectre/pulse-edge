@@ -33,9 +33,9 @@ class PrivacyScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: T.space2),
                 Text(
-                  'Your sensor data, anomaly history, profile, chat messages, '
-                  'and personal baseline live in an encrypted database on this '
-                  'device. They are never uploaded to any server.',
+                  'Your readings, alert history, profile, chat messages, and '
+                  'usual-pattern learning are stored locally on this device. '
+                  'They are never uploaded to any server.',
                   style: T.body.copyWith(color: T.primary),
                 ),
               ],
@@ -46,27 +46,25 @@ class PrivacyScreen extends ConsumerWidget {
             children: [
               const NeuListTile(
                 icon: Icons.cloud_off_rounded,
-                title: 'No backend',
-                subtitle: 'Pulse Edge does not run any servers.',
+                title: 'No account required',
+                subtitle: 'Pulse Edge keeps your readings on your phone.',
               ),
               const NeuListTile(
                 icon: Icons.psychology_rounded,
-                title: 'On-device assistant',
+                title: 'Private assistant',
                 subtitle:
-                    'The assistant uses live local data. After the download, the edge model runs on your phone.',
+                    'The assistant explains your readings using data on this phone.',
               ),
               const NeuListTile(
                 icon: Icons.bluetooth_rounded,
                 title: 'Bluetooth only',
-                subtitle:
-                    'The wearable communicates over BLE. No Wi-Fi, no GSM.',
+                subtitle: 'The wearable connects directly to your phone.',
               ),
               NeuListTile(
-                icon: Icons.download_for_offline_rounded,
-                title: 'One-time downloads',
+                icon: Icons.ios_share_rounded,
+                title: 'User-controlled exports',
                 subtitle:
-                    'The only network use is the optional model download. After '
-                    "that you can be permanently offline.",
+                    'Health reports are created locally and only leave the app when you share them.',
               ),
             ],
           ),
@@ -89,8 +87,8 @@ class PrivacyScreen extends ConsumerWidget {
         backgroundColor: T.surfaceRaised,
         title: const Text('Erase everything?'),
         content: const Text(
-          'This deletes your profile, baseline, alert history, chats, and '
-          'the offline model. The app will return to first-launch state.',
+          'This deletes your profile, usual-pattern learning, alert history, '
+          'chats, and local settings. The app will return to first-launch state.',
         ),
         actions: [
           TextButton(
@@ -107,7 +105,6 @@ class PrivacyScreen extends ConsumerWidget {
     );
     if (confirmed != true) return;
     await ref.read(authServiceProvider).wipe();
-    await ref.read(modelDownloadProvider).delete();
     await ref.read(settingsProvider).wipe();
     if (!context.mounted) return;
     context.go(Routes.splash);

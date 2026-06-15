@@ -8,8 +8,8 @@ import 'background/background_controller.dart';
 import 'ble/ble_service.dart';
 import 'db/database.dart';
 import 'db/repositories.dart';
+import 'export/health_report_service.dart';
 import 'llm/llm_service.dart';
-import 'llm/model_download_manager.dart';
 import 'ml/anomaly_detector.dart';
 import 'ml/baseline_service.dart';
 import 'ml/feature_extractor.dart';
@@ -105,22 +105,26 @@ final bleServiceProvider = Provider<BleService>((ref) {
   return svc;
 });
 
-final modelDownloadProvider = Provider<ModelDownloadManager>(
-  (ref) => ModelDownloadManager(),
-);
-
 final llmServiceProvider = Provider<LlmService>(
   (ref) => LlmService(
     ble: ref.watch(bleServiceProvider),
     sensorRepo: ref.watch(sensorRepoProvider),
     anomalyRepo: ref.watch(anomalyRepoProvider),
     profileRepo: ref.watch(profileRepoProvider),
-    download: ref.watch(modelDownloadProvider),
   ),
 );
 
 final backgroundProvider = Provider<BackgroundController>(
   (ref) => BackgroundController(),
+);
+
+final healthReportServiceProvider = Provider<HealthReportService>(
+  (ref) => HealthReportService(
+    sensorRepo: ref.watch(sensorRepoProvider),
+    featureRepo: ref.watch(featureRepoProvider),
+    anomalyRepo: ref.watch(anomalyRepoProvider),
+    profileRepo: ref.watch(profileRepoProvider),
+  ),
 );
 
 // ─── session-scoped UI state ───────────────────────────────────────────────

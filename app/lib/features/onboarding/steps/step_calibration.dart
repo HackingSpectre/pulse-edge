@@ -17,8 +17,8 @@ class StepCalibration extends StatelessWidget {
           const SizedBox(height: T.space2),
           Text(
             'Pulse Edge spends its first seven days quietly building your '
-            'personal baseline. During this period, alerts only fire on the '
-            'hard safety rules - never on subtle pattern shifts.',
+            'usual range. During this period, alerts focus on readings that '
+            'may need attention, not subtle pattern changes.',
             style: T.bodySoft,
           ),
           const SizedBox(height: T.space6),

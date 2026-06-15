@@ -1,8 +1,10 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../app/router.dart';
 import '../../core/db/database.dart';
 import '../../core/providers.dart';
 import '../../core/theme/tokens.dart';
@@ -41,6 +43,13 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     final from = _anchor.subtract(_windowDuration).millisecondsSinceEpoch;
     return NeuScaffold(
       title: 'History',
+      actions: [
+        NeuIconButton(
+          icon: Icons.ios_share_rounded,
+          tooltip: 'Health report',
+          onPressed: () => context.go(Routes.healthReport),
+        ),
+      ],
       scrollable: true,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -246,7 +255,7 @@ class _StatsCard extends ConsumerWidget {
         if (hrs.isEmpty) {
           return NeuCard(
             child: Center(
-              child: Text('No samples in this period', style: T.caption),
+              child: Text('No readings in this period', style: T.caption),
             ),
           );
         }
@@ -262,17 +271,17 @@ class _StatsCard extends ConsumerWidget {
               Row(
                 children: [
                   _Stat(
-                    label: 'Mean',
+                    label: 'Average',
                     value: mean.toStringAsFixed(0),
                     unit: 'bpm',
                   ),
                   _Stat(
-                    label: 'Low (p10)',
+                    label: 'Lower range',
                     value: p10.toStringAsFixed(0),
                     unit: 'bpm',
                   ),
                   _Stat(
-                    label: 'High (p90)',
+                    label: 'Upper range',
                     value: p90.toStringAsFixed(0),
                     unit: 'bpm',
                   ),

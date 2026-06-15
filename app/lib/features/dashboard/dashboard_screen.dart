@@ -13,38 +13,18 @@ import '../../core/providers.dart';
 import '../../core/theme/tokens.dart';
 import '../../shared/widgets/widgets.dart';
 
-class DashboardScreen extends ConsumerStatefulWidget {
+class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
   @override
-  ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
-}
-
-class _DashboardScreenState extends ConsumerState<DashboardScreen> {
-  @override
-  void initState() {
-    super.initState();
-    // Auto-start the demo source if no real connection is up. Lets first-launch
-    // users see the dashboard come alive immediately, even after a scan error.
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final ble = ref.read(bleServiceProvider);
-      if (ble.status.state == BleConnState.idle ||
-          ble.status.state == BleConnState.error) {
-        await ble.startDemo();
-      }
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final ble = ref.watch(bleServiceProvider);
+  Widget build(BuildContext context, WidgetRef ref) {
     return NeuScaffold(
       title: 'Live',
       actions: [
         NeuIconButton(
-          icon: Icons.refresh_rounded,
-          tooltip: 'Reconnect',
-          onPressed: () => ble.startDemo(),
+          icon: Icons.bluetooth_searching_rounded,
+          tooltip: 'Wearable',
+          onPressed: () => context.go(Routes.settingsDevice),
         ),
       ],
       scrollable: true,
@@ -88,7 +68,7 @@ class _ConnectionStrip extends ConsumerWidget {
           BleConnState.connected =>
             s.contactOk == false
                 ? 'Adjust wearable contact'
-                : (s.demo ? 'Demo data' : (s.deviceName ?? 'Connected')),
+                : (s.deviceName ?? 'Connected'),
           BleConnState.connecting => 'Connecting…',
           BleConnState.reconnecting => 'Reconnecting…',
           BleConnState.scanning => 'Scanning…',
@@ -185,7 +165,7 @@ class _WearableMetrics extends ConsumerWidget {
             _MetricTile(
               icon: Icons.water_drop_rounded,
               color: T.info,
-              label: 'SpO₂',
+              label: 'Oxygen',
               value: v.spo2 == null ? '--' : v.spo2!.toStringAsFixed(0),
               unit: '%',
               caption: _oxygenLabel(v.spo2),
@@ -202,7 +182,7 @@ class _WearableMetrics extends ConsumerWidget {
             _MetricTile(
               icon: Icons.speed_rounded,
               color: T.primary,
-              label: 'Motion',
+              label: 'Movement',
               value: motion == null ? '--' : motion.toStringAsFixed(2),
               unit: 'g',
               caption: ActivityClass.name(v.activity),
@@ -210,21 +190,21 @@ class _WearableMetrics extends ConsumerWidget {
             _MetricTile(
               icon: Icons.threed_rotation_rounded,
               color: T.danger,
-              label: 'Gyro',
+              label: 'Rotation',
               value: gyro,
               unit: 'dps',
               compact: true,
-              caption: 'x, y, z',
+              caption: 'turning motion',
               slantRight: true,
             ),
             _MetricTile(
               icon: Icons.open_with_rounded,
               color: T.success,
-              label: 'Accel',
+              label: 'Direction',
               value: accel,
               unit: 'm/s²',
               compact: true,
-              caption: 'x, y, z',
+              caption: 'body movement',
             ),
             _MetricTile(
               icon: Icons.directions_walk_rounded,

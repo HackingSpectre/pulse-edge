@@ -27,7 +27,11 @@ class _Bootstrap extends ConsumerWidget {
     return prefs.when(
       loading: () => const _BootSplash(),
       error: (e, _) => MaterialApp(
-        home: Scaffold(body: Center(child: Text('Failed to start: $e'))),
+        home: const Scaffold(
+          body: Center(
+            child: Text('Pulse Edge could not start. Please restart the app.'),
+          ),
+        ),
       ),
       data: (_) => const PulseEdgeApp(),
     );

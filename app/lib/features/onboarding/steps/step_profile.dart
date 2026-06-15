@@ -72,7 +72,7 @@ class StepProfileState extends ConsumerState<StepProfile> {
           Text('A bit about you', style: T.h1),
           const SizedBox(height: T.space2),
           Text(
-            'Used to seed your personal baseline. Stored only on this phone. '
+            'Used to understand your usual range. Stored only on this phone; '
             'we never sync it.',
             style: T.bodySoft,
           ),

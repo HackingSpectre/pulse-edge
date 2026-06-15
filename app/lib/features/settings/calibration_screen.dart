@@ -29,7 +29,7 @@ class _CalibrationScreenState extends ConsumerState<CalibrationScreen> {
   @override
   Widget build(BuildContext context) {
     return NeuScaffold(
-      title: 'Personal baseline',
+      title: 'Usual patterns',
       showBack: true,
       onBack: () => context.go(Routes.settings),
       scrollable: true,
@@ -52,8 +52,8 @@ class _CalibrationScreenState extends ConsumerState<CalibrationScreen> {
                     _warmedUp == null
                         ? 'Loading…'
                         : (_warmedUp!
-                              ? 'Baseline established. Pattern detector is on.'
-                              : 'Still learning. The first 7 days build your baseline.'),
+                              ? 'Your usual patterns are ready.'
+                              : 'Still learning. The first 7 days build your usual range.'),
                     style: T.bodyStrong.copyWith(
                       color: _warmedUp == true ? T.success : T.warning,
                     ),
@@ -70,12 +70,11 @@ class _CalibrationScreenState extends ConsumerState<CalibrationScreen> {
                 Text('How it works'.toUpperCase(), style: T.label),
                 const SizedBox(height: T.space3),
                 Text(
-                  'Pulse Edge keeps a running average and standard deviation '
-                  'of your heart rate, RMSSD, temperature, and SpO₂, broken '
-                  'down by time-of-day and current activity. After about a '
-                  'week the second-tier pattern detector starts comparing '
-                  'live readings to your own usual values, instead of only '
-                  'the hard safety thresholds.',
+                  'Pulse Edge learns your usual heart rate, blood oxygen, '
+                  'skin temperature, and movement patterns by time of day and '
+                  'activity. After about a week, alerts can compare new '
+                  'readings with your own normal range, not only general '
+                  'safety checks.',
                   style: T.body,
                 ),
               ],
@@ -83,15 +82,15 @@ class _CalibrationScreenState extends ConsumerState<CalibrationScreen> {
           ),
           const SizedBox(height: T.space5),
           NeuButton(
-            label: 'Recalibrate from scratch',
+            label: 'Reset learning',
             icon: Icons.restart_alt_rounded,
             variant: NeuButtonVariant.danger,
             onPressed: () async {
               await ref.read(baselineServiceProvider).reset();
               if (!context.mounted) return;
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Baseline cleared.')),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text('Learning reset.')));
               setState(() => _warmedUp = false);
             },
           ),

@@ -67,24 +67,31 @@ class HealthAnalyzer {
     } else if (hr >= 180 || hr <= 35) {
       penalty += 45;
       reasons.add('Heart rate is outside the sustained safety band.');
-    } else if (hr >= 140 && activity < 2) {
+    } else if (hr >= 140 && activity == 0) {
+      penalty += 30;
+      reasons.add('Resting heart rate is high.');
+    } else if (hr >= 155 && activity == 1) {
       penalty += 26;
-      reasons.add('Heart rate is high for the current activity level.');
+      reasons.add('Heart rate is high for light activity.');
     } else if (hr >= 120 && activity == 0) {
       penalty += 18;
       reasons.add('Resting heart rate is elevated.');
+    } else if (hr <= 45 && activity == 0) {
+      penalty += 18;
+      reasons.add('Resting heart rate is low enough to recheck.');
     } else if (hr < 50 && activity == 0) {
-      penalty += 10;
-      reasons.add(
-        'Resting heart rate is low; compare with your normal baseline.',
-      );
+      penalty += 8;
+      reasons.add('Resting heart rate is low; compare with your usual range.');
     }
 
-    if (spo2 != null) {
+    if (spo2 == null) {
+      penalty += 4;
+      reasons.add('Oxygen data is not available yet.');
+    } else {
       if (spo2 <= 90) {
         penalty += 45;
-        reasons.add('Blood oxygen is below the safety threshold.');
-      } else if (spo2 < 95) {
+        reasons.add('Blood oxygen is below the safety level.');
+      } else if (spo2 <= 94) {
         penalty += 18;
         reasons.add('Blood oxygen is lower than typical resting range.');
       }
@@ -94,17 +101,25 @@ class HealthAnalyzer {
       if (temp >= 39.5 || temp <= 34) {
         penalty += 34;
         reasons.add('Skin temperature is outside the expected wearable range.');
-      } else if (temp >= 37.5 || temp < 35) {
+      } else if (temp >= 38.0 || temp <= 35.0) {
+        penalty += 18;
+        reasons.add('Skin temperature shows sustained drift.');
+      } else if (temp >= 37.5 || temp < 35.5) {
         penalty += 12;
         reasons.add('Skin temperature is drifting from the usual range.');
       }
     }
 
-    if (motion != null && motion > 2.8) {
-      penalty += 10;
-      reasons.add(
-        'Motion intensity is high; HR changes may be activity-related.',
-      );
+    if (motion != null) {
+      if (motion > 2.8) {
+        penalty += 10;
+        reasons.add(
+          'Motion intensity is high; HR changes may be activity-related.',
+        );
+      } else if (activity == 0 && hr != null && hr >= 120 && motion < 1.25) {
+        penalty += 8;
+        reasons.add('Heart rate is elevated while movement is low.');
+      }
     }
 
     penalty += recentHighAlerts * 22 + recentMediumAlerts * 10;

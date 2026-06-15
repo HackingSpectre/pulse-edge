@@ -11,6 +11,7 @@ import '../features/dashboard/dashboard_screen.dart';
 import '../features/history/history_screen.dart';
 import '../features/onboarding/onboarding_flow.dart';
 import '../features/onboarding/splash_screen.dart';
+import '../features/reports/health_report_screen.dart';
 import '../features/settings/about_screen.dart';
 import '../features/settings/calibration_screen.dart';
 import '../features/settings/device_settings_screen.dart';
@@ -36,6 +37,7 @@ class Routes {
   static const settingsDevice = '/settings/device';
   static const settingsModel = '/settings/model';
   static const settingsPrivacy = '/settings/privacy';
+  static const healthReport = '/settings/health-report';
   static const settingsSecurity = '/settings/security';
   static const settingsCalibration = '/settings/calibration';
   static const settingsAbout = '/settings/about';
@@ -112,6 +114,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: Routes.settingsPrivacy,
             builder: (_, _) => const PrivacyScreen(),
+          ),
+          GoRoute(
+            path: Routes.healthReport,
+            builder: (_, _) => const HealthReportScreen(),
           ),
           GoRoute(
             path: Routes.settingsSecurity,

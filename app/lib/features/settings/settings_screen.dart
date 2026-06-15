@@ -58,28 +58,28 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: T.space5),
-          Text('SYSTEM', style: T.label),
+          Text('APP', style: T.label),
           const SizedBox(height: T.space2),
           NeuListGroup(
             children: [
               NeuListTile(
                 icon: Icons.bluetooth_rounded,
                 title: 'Wearable',
-                subtitle: 'Pair, disconnect, firmware',
+                subtitle: 'Pair, disconnect, and check fit',
                 onTap: () => context.go(Routes.settingsDevice),
               ),
               NeuListTile(
-                icon: Icons.psychology_rounded,
+                icon: Icons.health_and_safety_rounded,
                 iconColor: T.info,
-                title: 'AI assistant',
-                subtitle: 'Download or manage the offline edge model',
+                title: 'Health guidance',
+                subtitle: 'How alerts and assistant replies are explained',
                 onTap: () => context.go(Routes.settingsModel),
               ),
               NeuListTile(
                 icon: Icons.auto_graph_rounded,
                 iconColor: T.warning,
-                title: 'Personal baseline',
-                subtitle: 'View progress, recalibrate',
+                title: 'Usual patterns',
+                subtitle: 'Review progress or reset learning',
                 onTap: () => context.go(Routes.settingsCalibration),
               ),
             ],
@@ -97,6 +97,13 @@ class SettingsScreen extends ConsumerWidget {
                 onTap: () => context.go(Routes.settingsPrivacy),
               ),
               NeuListTile(
+                icon: Icons.ios_share_rounded,
+                iconColor: T.info,
+                title: 'Health report',
+                subtitle: 'Share or save a summary for your doctor',
+                onTap: () => context.go(Routes.healthReport),
+              ),
+              NeuListTile(
                 icon: Icons.lock_rounded,
                 title: 'Password',
                 subtitle: 'Set or update your app PIN',
@@ -105,7 +112,7 @@ class SettingsScreen extends ConsumerWidget {
               NeuListTile(
                 icon: Icons.info_outline_rounded,
                 title: 'About',
-                subtitle: 'Version, licenses, sources',
+                subtitle: 'App information',
                 onTap: () => context.go(Routes.settingsAbout),
               ),
             ],

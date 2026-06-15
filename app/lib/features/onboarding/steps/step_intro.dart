@@ -44,7 +44,7 @@ class StepIntro extends StatelessWidget {
           const SizedBox(height: T.space3),
           _Pill(
             icon: Icons.psychology_rounded,
-            label: 'AI assistant lives on-device',
+            label: 'Private guidance on your phone',
           ),
         ],
       ),

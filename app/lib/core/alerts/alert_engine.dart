@@ -32,9 +32,18 @@ class AlertEngine {
   // sustained 30-s windows. See PLAN.md §6.3 / §7.5.
   static const double _hrHighBpm = 180;
   static const double _hrLowBpm = 35;
+  static const double _hrRestElevatedBpm = 120;
+  static const double _hrRestHighBpm = 140;
+  static const double _hrWalkHighBpm = 155;
+  static const double _hrRestLowBpm = 45;
   static const double _spo2LowPct = 90;
+  static const double _spo2WatchPct = 94;
   static const double _tempHighC = 39.5;
   static const double _tempLowC = 34.0;
+  static const double _tempWarmC = 38.0;
+  static const double _tempCoolC = 35.0;
+  static const double _fallAccelMeanG = 2.4;
+  static const double _fallAccelStdG = 1.4;
 
   // Anomaly thresholds.
   static const double _modelHigh = 0.80;
@@ -95,16 +104,94 @@ class AlertEngine {
       return;
     }
 
-    // 2. Model + baseline combination.
-    final baselineZ = await _baseline.zScore(
-      metric: 'hr',
-      tod: TimeBuckets.forHour(
-        DateTime.fromMillisecondsSinceEpoch(w.tsMs).hour,
-      ),
-      activity: w.activity,
-      value: w.hrMean,
-    );
-    final baselineFlag = baselineZ != null && baselineZ.abs() > _baselineSigma;
+    // 2. Sustained caution rules. These are not emergencies, but they are
+    // clinically useful enough to preserve in the alert timeline.
+    if (w.spo2Mean != null && w.spo2Mean! <= _spo2WatchPct) {
+      await _fire(
+        w,
+        AlertType.hypoxia,
+        AlertSeverity.medium,
+        modelP,
+        _explainOxygenWatch(w),
+      );
+      return;
+    }
+    if (w.activity == ActivityClass.resting && w.hrMean >= _hrRestHighBpm) {
+      await _fire(
+        w,
+        AlertType.tachycardia,
+        AlertSeverity.medium,
+        modelP,
+        _explainRestingTachy(w),
+      );
+      return;
+    }
+    if (w.activity == ActivityClass.resting &&
+        w.hrMean >= _hrRestElevatedBpm &&
+        w.accelMean < 1.25) {
+      await _fire(
+        w,
+        AlertType.tachycardia,
+        AlertSeverity.medium,
+        modelP,
+        _explainRestingTachy(w),
+      );
+      return;
+    }
+    if (w.activity == ActivityClass.walking && w.hrMean >= _hrWalkHighBpm) {
+      await _fire(
+        w,
+        AlertType.tachycardia,
+        AlertSeverity.medium,
+        modelP,
+        _explainActivityTachy(w),
+      );
+      return;
+    }
+    if (w.activity == ActivityClass.resting && w.hrMean <= _hrRestLowBpm) {
+      await _fire(
+        w,
+        AlertType.bradycardia,
+        AlertSeverity.medium,
+        modelP,
+        _explainRestingBrady(w),
+      );
+      return;
+    }
+    if (w.tempMean >= _tempWarmC) {
+      await _fire(
+        w,
+        AlertType.hyperthermia,
+        AlertSeverity.medium,
+        modelP,
+        _explainTempWatch(w, warm: true),
+      );
+      return;
+    }
+    if (w.tempMean <= _tempCoolC) {
+      await _fire(
+        w,
+        AlertType.hypothermia,
+        AlertSeverity.medium,
+        modelP,
+        _explainTempWatch(w, warm: false),
+      );
+      return;
+    }
+    if (w.accelMean >= _fallAccelMeanG && w.accelStd >= _fallAccelStdG) {
+      await _fire(
+        w,
+        AlertType.fall,
+        AlertSeverity.medium,
+        modelP,
+        _explainFallLikeMotion(w),
+      );
+      return;
+    }
+
+    // 3. Model + baseline combination.
+    final baseline = await _baselineSignals(w);
+    final baselineFlag = baseline.strong;
     final modelFlag = modelP >= _modelMedium;
 
     if (modelP >= _modelHigh && baselineFlag) {
@@ -113,7 +200,7 @@ class AlertEngine {
         AlertType.modelAnomaly,
         AlertSeverity.high,
         modelP,
-        _explainPattern(w, baselineZ),
+        _explainPattern(w, baseline),
       );
     } else if (modelFlag || baselineFlag) {
       await _fire(
@@ -121,7 +208,7 @@ class AlertEngine {
         AlertType.modelAnomaly,
         AlertSeverity.medium,
         modelP,
-        _explainPattern(w, baselineZ),
+        _explainPattern(w, baseline),
       );
     }
     // else: log only - no row inserted.
@@ -138,7 +225,7 @@ class AlertEngine {
       type.id,
       w.tsMs - _duplicateWindowMs,
     );
-    if (duplicate != null) return;
+    if (duplicate != null && duplicate.severity >= sev.code) return;
 
     final id = _uuid.v4();
     final metrics = {
@@ -149,6 +236,8 @@ class AlertEngine {
       'spo2': w.spo2Mean,
       'tempMean': w.tempMean,
       'activity': w.activity,
+      'accelMean': w.accelMean,
+      'accelStd': w.accelStd,
       'modelP': modelP,
     };
     await _anomalyRepo.upsert(
@@ -189,7 +278,12 @@ class AlertEngine {
 
   String _explainHypoxia(FeatureWindow w) =>
       'Blood oxygen averaged ${w.spo2Mean?.toStringAsFixed(0) ?? '--'}%, below '
-      'the safe threshold of 90%.';
+      'the safety level of 90%.';
+
+  String _explainOxygenWatch(FeatureWindow w) =>
+      'Blood oxygen averaged ${w.spo2Mean?.toStringAsFixed(0) ?? '--'}%, which '
+      'is below the usual resting range. Recheck sensor contact and watch for '
+      'a sustained dip.';
 
   String _explainHyper(FeatureWindow w) =>
       'Skin temperature held above 39.5°C. Remove tight clothing, cool down, '
@@ -199,12 +293,38 @@ class AlertEngine {
       'Skin temperature dropped below 34°C. Move somewhere warmer and check '
       'the watch is in good contact with your wrist.';
 
-  String _explainPattern(FeatureWindow w, double? z) {
-    final zPart = z == null
+  String _explainRestingTachy(FeatureWindow w) =>
+      'Heart rate averaged ${w.hrMean.toStringAsFixed(0)} bpm while resting '
+      'or moving very little. Rest and recheck whether it returns toward your '
+      'usual range.';
+
+  String _explainActivityTachy(FeatureWindow w) =>
+      'Heart rate averaged ${w.hrMean.toStringAsFixed(0)} bpm while '
+      '${_activityLabel(w.activity)}. This may be activity-related, but it is '
+      'high enough to keep in the timeline.';
+
+  String _explainRestingBrady(FeatureWindow w) =>
+      'Heart rate averaged ${w.hrMean.toStringAsFixed(0)} bpm while resting. '
+      'This can be normal for some people, but should be compared with your '
+      'usual range and symptoms.';
+
+  String _explainTempWatch(FeatureWindow w, {required bool warm}) {
+    final direction = warm ? 'warm' : 'cool';
+    return 'Skin temperature averaged ${w.tempMean.toStringAsFixed(1)}°C, a '
+        '$direction sustained drift for a wearable reading. Check fit and '
+        'compare with how you feel.';
+  }
+
+  String _explainFallLikeMotion(FeatureWindow w) =>
+      'Motion showed a sharp sustained acceleration pattern. Pulse Edge marked '
+      'it for review because it may reflect a fall, impact, or abrupt movement.';
+
+  String _explainPattern(FeatureWindow w, _BaselineSignals baseline) {
+    final zPart = baseline.description.isEmpty
         ? ''
-        : ' (${z.abs().toStringAsFixed(1)}σ from your usual)';
-    return 'Heart-rate pattern looks unusual for this time of day '
-        'while ${_activityLabel(w.activity)}$zPart.';
+        : ' (${baseline.description})';
+    return 'The combined pattern looks unusual for this time of day while '
+        '${_activityLabel(w.activity)}$zPart.';
   }
 
   String _guidance(AlertType t, AlertSeverity sev) {
@@ -221,4 +341,50 @@ class AlertEngine {
     2 => 'running',
     _ => 'active',
   };
+
+  Future<_BaselineSignals> _baselineSignals(FeatureWindow w) async {
+    final tod = TimeBuckets.forHour(
+      DateTime.fromMillisecondsSinceEpoch(w.tsMs).hour,
+    );
+    final checks = <String, double>{
+      'hr': w.hrMean,
+      'rmssd': w.rmssd,
+      'temp': w.tempMean,
+      if (w.spo2Mean != null) 'spo2': w.spo2Mean!,
+    };
+    final flagged = <String>[];
+    for (final entry in checks.entries) {
+      final z = await _baseline.zScore(
+        metric: entry.key,
+        tod: tod,
+        activity: w.activity,
+        value: entry.value,
+      );
+      if (z == null) continue;
+      final strong = entry.key == 'rmssd'
+          ? z < -_baselineSigma
+          : z.abs() > _baselineSigma;
+      if (strong) {
+        flagged.add('${_metricLabel(entry.key)} outside usual range');
+      }
+    }
+    return _BaselineSignals(flagged);
+  }
+
+  String _metricLabel(String key) => switch (key) {
+    'hr' => 'heart rate',
+    'rmssd' => 'heart rhythm',
+    'temp' => 'skin temperature',
+    'spo2' => 'blood oxygen',
+    _ => key,
+  };
+}
+
+class _BaselineSignals {
+  const _BaselineSignals(this.flagged);
+
+  final List<String> flagged;
+
+  bool get strong => flagged.isNotEmpty;
+  String get description => flagged.join(', ');
 }

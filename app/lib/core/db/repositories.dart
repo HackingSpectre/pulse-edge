@@ -176,6 +176,13 @@ class FeatureRepo {
           ),
         );
   }
+
+  Future<List<FeatureRow>> inRange(int fromMs, int toMs) {
+    return (_db.select(_db.featureRows)
+          ..where((t) => t.tsMs.isBetweenValues(fromMs, toMs))
+          ..orderBy([(t) => OrderingTerm.asc(t.tsMs)]))
+        .get();
+  }
 }
 
 class AnomalyRepo {
@@ -210,6 +217,13 @@ class AnomalyRepo {
   Future<List<AnomalyRow>> recentSince(int fromMs) {
     return (_db.select(_db.anomalies)
           ..where((t) => t.tsMs.isBiggerOrEqualValue(fromMs))
+          ..orderBy([(t) => OrderingTerm.desc(t.tsMs)]))
+        .get();
+  }
+
+  Future<List<AnomalyRow>> inRange(int fromMs, int toMs) {
+    return (_db.select(_db.anomalies)
+          ..where((t) => t.tsMs.isBetweenValues(fromMs, toMs))
           ..orderBy([(t) => OrderingTerm.desc(t.tsMs)]))
         .get();
   }

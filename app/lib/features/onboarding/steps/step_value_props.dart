@@ -16,8 +16,8 @@ class StepValueProps extends StatelessWidget {
           Text('What you get', style: T.h1),
           const SizedBox(height: T.space2),
           Text(
-            'Pulse Edge is a wearable and an AI assistant. Both are quiet, both on '
-            "your phone, both working when you're offline.",
+            'Pulse Edge keeps your wearable readings, alerts, and guidance on '
+            "your phone, even when you're offline.",
             style: T.bodySoft,
           ),
           const SizedBox(height: T.space6),
@@ -33,7 +33,7 @@ class StepValueProps extends StatelessWidget {
           _ValueCard(
             icon: Icons.show_chart_rounded,
             color: T.primary,
-            title: 'Personal baseline',
+            title: 'Usual patterns',
             body:
                 'After a week the app learns your usual rhythm by '
                 'time-of-day and activity, instead of comparing you to '
@@ -45,17 +45,17 @@ class StepValueProps extends StatelessWidget {
             color: T.warning,
             title: 'Quiet alerts',
             body:
-                'Two layers of safety nets: a hard rule book and a learned '
-                'pattern model. Only sustained 30-second windows trigger.',
+                'The app looks for important changes that last long enough to '
+                'matter, instead of reacting to every noisy reading.',
           ),
           const SizedBox(height: T.space4),
           _ValueCard(
             icon: Icons.chat_bubble_rounded,
             color: T.info,
-            title: 'On-device assistant',
+            title: 'Private assistant',
             body:
-                'Download the offline edge model to ask richer questions '
-                'about your data on this phone.',
+                'Ask about heart rate, oxygen, temperature, movement, and '
+                'alerts without sending your data to the cloud.',
           ),
           const SizedBox(height: T.space5),
         ],

@@ -1,11 +1,11 @@
 {
-    "name": "pulse_edge",
-    "short_name": "pulse_edge",
+    "name": "Pulse Edge",
+    "short_name": "Pulse Edge",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "A private wearable health monitor for local alerts, trends, and health reports.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
